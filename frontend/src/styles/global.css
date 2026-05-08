@@ -52,47 +52,51 @@ select {
   background: transparent;
 }
 
+/* 1. 让 header 内容靠上对齐，减少 header 高度（与顶端分界线对齐） */
 .shell-header {
+  background: linear-gradient(135deg, #0a0a0f 0%, #15132b 40%, #1a1035 100%) !important;
+  padding: 0 48px !important;
+  height: 72px !important;
+  line-height: 72px !important;
+  border-bottom: 1px solid rgba(255, 179, 71, 0.15);
   position: sticky;
   top: 0;
   z-index: 100;
-  height: auto;
-  line-height: normal;
-  padding: 18px 28px;
-  background: rgba(5, 8, 22, 0.78) !important;
-  backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(20px);
 }
 
-.shell-header-inner,
-.shell-footer-inner {
-  width: min(1200px, 100%);
-  margin: 0 auto;
+/* 使内部右/左两侧元素都靠顶部对齐（原来是 center） */
+.shell-header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  height: 100%;
+  width: min(1400px, 100%);
+  margin: 0 auto;
 }
 
+/* 2. 收窄品牌区域并移除多余间距 */
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  border: 0;
-  background: transparent;
-  color: var(--text-strong);
+  gap: 16px;
   cursor: pointer;
-  padding: 0;
+  transition: transform 0.3s ease;
 }
 
+.brand:hover {
+  transform: scale(1.03);
+}
+
+/* 3. 进一步缩小图标容器并调整圆角 */
 .brand-mark {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  display: inline-block;
+  width: 62px;
+  height: 44px;
+  border-radius: 50%;
   overflow: hidden;
-  background: none;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  box-shadow: none;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .brand-mark img {
@@ -100,35 +104,65 @@ select {
   height: 100%;
   display: block;
   object-fit: cover;
+  object-position: center;
 }
 
-.nav-mark {
-  width: 36px;
-  height: 36px;
-}
-
+/* 4. 限制品牌文字宽度，防止文字把左侧区域撑大 */
 .brand-copy {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+/* 5. 小屏/导航处使用更小的图标 */
+.nav-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .brand-copy strong {
-  font-size: 16px;
+  color: #FFD699;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .brand-copy small {
-  color: rgba(226, 232, 240, 0.55);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .shell-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .locale-select {
-  width: 128px;
+  width: 120px;
+}
+
+.locale-select .ant-select-selector {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 179, 71, 0.2) !important;
+  border-radius: 20px !important;
+  color: #FFD699 !important;
+}
+
+.locale-select .ant-select-selection-item,
+.locale-select .ant-select-selection-search-input {
+  color: #FFD699 !important;
+  font-size: 12px;
+}
+
+.locale-select .ant-select-arrow {
+  color: rgba(255, 214, 153, 0.7) !important;
 }
 
 .header-pill {
@@ -154,19 +188,23 @@ select {
 .landing-page,
 .result-page {
   position: relative;
-  min-height: calc(100vh - 90px);
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0d171d 0%, #142430 58%, #0f1a22 100%);
+  color: #ecf3fa;
+  isolation: isolate;
+  overflow-x: hidden;
 }
 
 .hero-content,
 .result-shell,
 .landing-hero-inner,
 .landing-form-section {
-  width: min(1200px, calc(100% - 40px));
+  width: min(1400px, calc(100% - 40px));
   margin: 0 auto;
 }
 
 .hero-page {
-  padding: 36px 0 56px;
+  padding: 36px 20px 56px;
 }
 
 .hero-glow,
@@ -239,15 +277,15 @@ select {
 
 .hero-card,
 .result-panel {
-  border: 1px solid var(--panel-border);
-  background: var(--panel) !important;
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.38);
+  border: 1.2px solid rgba(236, 243, 250, 0.2);
+  background: rgba(12, 23, 32, 0.56) !important;
+  backdrop-filter: blur(18px);
+  border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(4, 11, 18, 0.52);
 }
 
 .hero-card {
-  padding: 10px;
+  padding: 20px;
 }
 
 .grid {
@@ -302,11 +340,11 @@ select {
 }
 
 .landing-form-section {
-  padding: 0 0 54px;
+  padding: 0 20px 86px;
 }
 
 .result-shell {
-  padding: 34px 0 56px;
+  padding: 70px 20px 44px;
 }
 
 .result-hero {
@@ -325,7 +363,7 @@ select {
 
 .result-grid {
   display: grid;
-  gap: 18px;
+  gap: 12px;
   grid-template-columns: 1.3fr 1fr;
 }
 
@@ -358,10 +396,10 @@ select {
 }
 
 .overview-card {
-  border-radius: 18px;
+  border-radius: 22px;
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  background: rgba(15, 23, 42, 0.55);
+  border: 1.2px solid rgba(236, 243, 250, 0.2);
+  background: rgba(12, 23, 32, 0.56);
 }
 
 .overview-image-wrap img {
@@ -394,9 +432,10 @@ select {
   min-height: 280px;
   display: grid;
   place-items: center;
-  border-radius: 18px;
-  border: 1px dashed rgba(148, 163, 184, 0.28);
-  color: rgba(226, 232, 240, 0.58);
+  border-radius: 22px;
+  border: 1.2px solid rgba(236, 243, 250, 0.2);
+  background: rgba(12, 23, 32, 0.56);
+  color: rgba(228, 236, 245, 0.72);
 }
 
 .chat-drawer {
@@ -413,10 +452,10 @@ select {
 
 .chat-shell {
   border-radius: 22px;
-  background: rgba(15, 23, 42, 0.94);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.5);
-  padding: 16px;
+  background: rgba(12, 23, 32, 0.56);
+  border: 1.2px solid rgba(236, 243, 250, 0.2);
+  box-shadow: 0 24px 80px rgba(4, 11, 18, 0.52);
+  padding: 20px;
 }
 
 .chat-header,

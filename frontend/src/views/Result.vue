@@ -39,7 +39,7 @@
           <div class="panel-head">
             <h2>{{ t('result.side.map') }}</h2>
           </div>
-          <div class="map-placeholder">Map canvas placeholder</div>
+          <MapView :attractions="attractions" :city="planRef?.city" />
         </a-card>
 
         <a-card class="result-panel days-panel" :bordered="false">
@@ -76,6 +76,7 @@ import { useI18n } from 'vue-i18n'
 // NavBar removed to prevent duplicate header
 import AIChat from '@/components/AIChat.vue'
 import OverviewAttractionCard from '@/components/OverviewAttractionCard.vue'
+import MapView from '@/components/MapView.vue'
 import type { ChatMessage } from '@/types'
 
 const router = useRouter()

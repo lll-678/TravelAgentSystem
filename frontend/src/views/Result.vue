@@ -111,13 +111,16 @@ const map = ref<any>(null)
 const initAMap = async () => {
   await nextTick()
   const mapJsKey = import.meta.env.VITE_AMAP_WEB_JS_KEY || ''
-  if (!mapJsKey) return
+  if (!mapJsKey) {
+    console.error('高德地图 JS Key 未配置，请在 .env 中设置 VITE_AMAP_WEB_JS_KEY')
+    return
+  }
 
   try {
     const AMap = await AMapLoader.load({
       key: mapJsKey,
       version: '2.0',
-      plugins: ['AMap.Marker', 'AMap.Polyline']
+      plugins: ['AMap.Marker', 'AMap.Polyline', 'AMap.InfoWindow']
     })
 
     map.value = new AMap.Map('amap-container', {
@@ -125,16 +128,23 @@ const initAMap = async () => {
       center: [116.397128, 39.916527]
     })
 
-    // draw route if we have at least two attractions
+    // 绘制路线（包含所有途经点）
     const items = attractions.value || []
     if (items.length >= 2) {
       const start = items[0]
       const end = items[items.length - 1]
       try {
         const res = await axios.get(`/api/routes/${start.id}/${end.id}`)
-        const path = res.data.path_nodes || []
-        if (path && path.length > 1) {
-          const coords = path.map((p: any) => [p.longitude, p.latitude])
+        const pathNodes = res.data.path_nodes || []
+        const distance = res.data.distance || 0
+        const estimatedHours = res.data.estimated_time_hours || 0
+        const source = res.data.source || 'unknown'
+
+        console.log(`[路线规划] 来源: ${source}, 距离: ${distance}km, 耗时: ${estimatedHours}h, 途经点: ${pathNodes.length}`)
+
+        if (pathNodes && pathNodes.length > 1) {
+          // 绘制完整的路线折线（包含所有途经点）
+          const coords = pathNodes.map((p: any) => [p.longitude, p.latitude])
           const polyline = new AMap.Polyline({
             path: coords,
             borderWeight: 2,
@@ -142,20 +152,66 @@ const initAMap = async () => {
             lineJoin: 'round'
           })
           map.value.add(polyline)
-          map.value.setFitView([polyline])
+
+          // 为每个途经点添加标记
+          const markers: any[] = []
+          const infoWindows: any[] = []
+
+          pathNodes.forEach((node: any, idx: number) => {
+            const isStart = idx === 0
+            const isEnd = idx === pathNodes.length - 1
+            const color = isStart ? '#00AA00' : isEnd ? '#FF0000' : '#0066CC'
+
+            const marker = new AMap.Marker({
+              position: [node.longitude, node.latitude],
+              title: node.name,
+              extData: { index: idx }
+            })
+            markers.push(marker)
+
+            // 点击标记显示信息窗口
+            marker.on('click', () => {
+              // 关闭其他窗口
+              infoWindows.forEach((iw: any) => iw.close())
+
+              const content = `<div style="padding:8px;">
+                <div style="font-weight:bold;">${node.name}</div>
+                <div style="font-size:12px; margin-top:4px;">坐标: ${node.latitude.toFixed(4)}, ${node.longitude.toFixed(4)}</div>
+                ${isStart ? '<div style="color:green; font-size:12px;">起点</div>' : ''}
+                ${isEnd ? '<div style="color:red; font-size:12px;">终点</div>' : ''}
+              </div>`
+
+              const infoWindow = new AMap.InfoWindow({
+                content: content,
+                position: [node.longitude, node.latitude],
+                offset: new AMap.Pixel(0, -30)
+              })
+              infoWindow.open(map.value, [node.longitude, node.latitude])
+              infoWindows.push(infoWindow)
+            })
+          })
+
+          map.value.add(markers)
+
+          // 自适应视野
+          map.value.setFitView(markers, true, [50, 50, 50, 50])
         } else if (items.length >= 2) {
-          // fallback draw straight line between start/end
+          // 降级：只有起终点
           const coords = [[start.longitude, start.latitude], [end.longitude, end.latitude]]
           const polyline = new AMap.Polyline({ path: coords, strokeColor: '#1890ff' })
           map.value.add(polyline)
-          map.value.setFitView([polyline])
+
+          const startMarker = new AMap.Marker({ position: coords[0], title: 'Start' })
+          const endMarker = new AMap.Marker({ position: coords[1], title: 'End' })
+          map.value.add([startMarker, endMarker])
+          map.value.setFitView([polyline, startMarker, endMarker])
         }
       } catch (e) {
-        console.warn('route draw failed', e)
+        console.error('[路线规划] API 调用失败:', e)
       }
     }
   } catch (err) {
-    console.error('AMap init failed', err)
+    console.error('AMap 初始化失败:', err)
   }
 }
 

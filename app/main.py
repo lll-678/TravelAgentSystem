@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
 
 from app.api.routes import router
 from app.db.database import engine

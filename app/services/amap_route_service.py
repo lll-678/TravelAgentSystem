@@ -1,0 +1,168 @@
+"""高德地图路线规划服务 - 获取真实的途经点"""
+
+import os
+from typing import Optional
+import requests
+
+
+class AmapRouteService:
+    """利用高德地图 API 获取驾车/步行路线途经点"""
+
+    def __init__(self, api_key: Optional[str] = None):
+        """
+        初始化高德地图服务
+        
+        Args:
+            api_key: 高德地图 Web API Key（可从环境变量或参数获取）
+        """
+        # 从 TripStar 同步的 key
+        self.api_key = api_key or os.getenv("AMAP_WEB_API_KEY", "")
+        if not self.api_key:
+            # 如果环境变量没有，尝试从 .env 文件读取
+            try:
+                from app.config import get_settings
+                settings = get_settings()
+                self.api_key = getattr(settings, 'amap_web_api_key', '') or os.getenv("AMAP_WEB_API_KEY", "")
+            except:
+                pass
+        
+        self.base_url = "https://restapi.amap.com/v3/direction/driving"
+
+    def get_route_via_amap(
+        self,
+        start_lat: float,
+        start_lon: float,
+        end_lat: float,
+        end_lon: float,
+        route_type: str = "0"
+    ) -> dict:
+        """
+        调用高德地图驾车路线规划 API，获取途经点
+        """
+        if not self.api_key:
+            print("⚠️ 高德地图 API Key 未配置")
+            return {
+                "success": False,
+                "error": "高德地图 API Key 未配置",
+                "distance": 0,
+                "duration": 0,
+                "steps": []
+            }
+
+        try:
+            params = {
+                "origin": f"{start_lon},{start_lat}",
+                "destination": f"{end_lon},{end_lat}",
+                "type": route_type,
+                "key": self.api_key,
+                "extensions": "all"
+            }
+
+            print(f"📍 调用高德地图 API: {start_lat},{start_lon} → {end_lat},{end_lon}")
+            response = requests.get(self.base_url, params=params, timeout=5)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # 检查状态：高德 API 返回字符串 "1" 表示成功
+            status = data.get("status")
+            if str(status) != "1":
+                error_msg = data.get("info", "路线规划失败")
+                print(f"❌ 高德地图 API 错误: {error_msg} (status: {status})")
+                return {
+                    "success": False,
+                    "error": error_msg,
+                    "distance": 0,
+                    "duration": 0,
+                    "steps": []
+                }
+
+            # 解析路线数据
+            route = data.get("route", {})
+            paths = route.get("paths", [])
+            
+            if not paths:
+                print("❌ 高德地图返回无路线数据")
+                return {
+                    "success": False,
+                    "error": "无法获取路线信息",
+                    "distance": 0,
+                    "duration": 0,
+                    "steps": []
+                }
+
+            path = paths[0]
+            distance = int(path.get("distance", 0))
+            duration = int(path.get("duration", 0))
+            steps = path.get("steps", [])
+
+            print(f"✅ 路线规划成功: {distance}m, {duration}秒, {len(steps)} 步")
+
+            # 从 steps 中提取所有的转折点坐标
+            waypoints = []
+            
+            # 添加起点
+            waypoints.append({
+                "lng": start_lon,
+                "lat": start_lat,
+                "action": "开始"
+            })
+
+            # 从每个 step 中提取转折点
+            for step_idx, step in enumerate(steps):
+                polyline = step.get("polyline", "")
+                if polyline:
+                    coords = polyline.split(";")
+                    for coord_idx, coord in enumerate(coords):
+                        if "," in coord:
+                            parts = coord.split(",")
+                            if len(parts) >= 2:
+                                try:
+                                    lat = float(parts[0])
+                                    lng = float(parts[1])
+                                    # 避免重复
+                                    if not waypoints or (waypoints[-1]["lat"], waypoints[-1]["lng"]) != (lat, lng):
+                                        waypoints.append({
+                                            "lat": lat,
+                                            "lng": lng,
+                                            "action": step.get("instruction", f"Step {step_idx + 1}")
+                                        })
+                                except ValueError:
+                                    pass
+
+            # 添加终点
+            if not waypoints or (waypoints[-1]["lat"], waypoints[-1]["lng"]) != (end_lat, end_lon):
+                waypoints.append({
+                    "lng": end_lon,
+                    "lat": end_lat,
+                    "action": "到达"
+                })
+
+            print(f"📌 提取了 {len(waypoints)} 个途经点")
+
+            return {
+                "success": True,
+                "distance": distance,
+                "duration": duration,
+                "steps": waypoints,
+                "error": None
+            }
+
+        except requests.exceptions.RequestException as e:
+            print(f"❌ 高德 API 请求失败: {str(e)}")
+            return {
+                "success": False,
+                "error": f"请求高德 API 失败: {str(e)}",
+                "distance": 0,
+                "duration": 0,
+                "steps": []
+            }
+        except Exception as e:
+            print(f"❌ 解析路线数据失败: {str(e)}")
+            return {
+                "success": False,
+                "error": f"解析路线数据失败: {str(e)}",
+                "distance": 0,
+                "duration": 0,
+                "steps": []
+            }

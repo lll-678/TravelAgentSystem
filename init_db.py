@@ -32,7 +32,7 @@ def init_db():
         print(f"✓ 已创建 {len(sample_pois)} 个 POI")
 
         print("\n✓ 数据库初始化完成！")
-        print("\n可以访问 http://127.0.0.1:8001/docs 进行 API 测试")
+        print("\n可以访问 http://127.0.0.1:8000/docs 进行 API 测试")
 
     except Exception as e:
         print(f"✗ 初始化失败: {e}")

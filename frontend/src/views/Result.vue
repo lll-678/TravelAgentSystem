@@ -28,6 +28,21 @@
       </section>
 
       <section class="result-grid">
+        <a-card class="result-panel route-panel" :bordered="false">
+          <div class="panel-head">
+            <h2>路线摘要</h2>
+            <span>{{ routeSummary?.sourceLabel || '等待路线生成' }}</span>
+          </div>
+          <div v-if="routeSummary" class="route-summary">
+            <p><strong>起点：</strong>{{ routeSummary.startName }}</p>
+            <p><strong>终点：</strong>{{ routeSummary.endName }}</p>
+            <p><strong>总距离：</strong>{{ routeSummary.distanceText }}</p>
+            <p><strong>预计耗时：</strong>{{ routeSummary.durationText }}</p>
+            <p><strong>路线点数：</strong>{{ routeSummary.nodeCount }}</p>
+          </div>
+          <p v-else class="result-empty">当前行程还没有足够的景点来生成路线摘要。</p>
+        </a-card>
+
         <a-card class="result-panel overview-panel" :bordered="false">
           <div class="panel-head">
             <h2>{{ t('result.side.overview') }}</h2>
@@ -60,13 +75,25 @@
           <div class="panel-head">
             <h2>{{ t('result.side.days') }}</h2>
           </div>
-          <a-timeline v-if="days.length > 0">
-            <a-timeline-item v-for="day in days" :key="day.day_index">
-              <strong>{{ t('common.dayNumber', { day: day.day_index + 1 }) }}</strong>
-              <p>{{ day.description }}</p>
-              <p>{{ day.attractions.map((item) => item.name).join('、') || t('common.noData') }}</p>
-            </a-timeline-item>
-          </a-timeline>
+          <div v-if="days.length > 0" class="day-cards">
+            <article v-for="day in days" :key="day.day_index" class="day-card">
+              <div class="day-card-head">
+                <strong>{{ t('common.dayNumber', { day: day.day_index + 1 }) }}</strong>
+                <span>{{ day.date }}</span>
+              </div>
+              <p class="day-card-desc">{{ day.description }}</p>
+              <div class="day-card-meta">
+                <span>{{ day.transportation }}</span>
+                <span>{{ day.accommodation }}</span>
+              </div>
+              <ul class="day-card-list">
+                <li v-for="item in day.attractions" :key="`${day.day_index}-${item.id}`">
+                  <strong>{{ item.name }}</strong>
+                  <span>{{ item.description || item.address }}</span>
+                </li>
+              </ul>
+            </article>
+          </div>
           <p v-else class="result-empty">{{ t('result.overview.empty') }}</p>
         </a-card>
 
@@ -110,6 +137,14 @@ const showChat = ref(false)
 const chatMessages = ref<ChatMessage[]>([])
 const chatPending = ref(false)
 const map = ref<any>(null)
+const routeSummary = ref<{
+  startName: string
+  endName: string
+  distanceText: string
+  durationText: string
+  nodeCount: number
+  sourceLabel: string
+} | null>(null)
 
 const planRef = getCurrentPlan()
 
@@ -204,6 +239,14 @@ const initAMap = async () => {
     const res = await findRoute(start.id, end.id)
     const routeData = res as any
     const pathNodes = routeData.path_nodes || []
+    routeSummary.value = {
+      startName: routeData.start_poi?.name || start.name,
+      endName: routeData.end_poi?.name || end.name,
+      distanceText: routeData.distance ? `${routeData.distance.toFixed(2)} km` : '暂无距离数据',
+      durationText: routeData.estimated_time_hours ? `${(routeData.estimated_time_hours * 60).toFixed(0)} 分钟` : '暂无耗时数据',
+      nodeCount: pathNodes.length,
+      sourceLabel: routeData.source === 'amap' ? '高德路径' : '本地图算法路径',
+    }
 
     if (pathNodes.length > 1) {
       const coords = pathNodes.map((point: any) => [point.longitude, point.latitude])
@@ -243,6 +286,7 @@ const initAMap = async () => {
     map.value.setFitView([fallbackPolyline])
   } catch (error) {
     console.error('AMap 初始化失败:', error)
+    routeSummary.value = null
   }
 }
 

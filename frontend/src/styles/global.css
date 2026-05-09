@@ -411,6 +411,20 @@ select {
   grid-column: 1 / -1;
 }
 
+.route-panel {
+  grid-column: 1 / -1;
+}
+
+.route-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.route-summary p {
+  margin: 0;
+  line-height: 1.7;
+}
+
 .panel-head {
   display: flex;
   align-items: center;
@@ -433,6 +447,68 @@ select {
 .result-empty,
 .budget-summary p {
   line-height: 1.7;
+}
+
+.day-cards {
+  display: grid;
+  gap: 14px;
+}
+
+.day-card {
+  border-radius: 18px;
+  border: 1.2px solid rgba(236, 243, 250, 0.12);
+  background: rgba(12, 23, 32, 0.42);
+  padding: 16px;
+}
+
+.day-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--text-strong);
+}
+
+.day-card-desc {
+  margin: 0 0 10px;
+  line-height: 1.7;
+}
+
+.day-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.day-card-meta span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.day-card-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.day-card-list li {
+  color: var(--text-soft);
+}
+
+.day-card-list strong,
+.day-card-list span {
+  display: block;
+}
+
+.day-card-list span {
+  margin-top: 4px;
+  line-height: 1.6;
 }
 
 .overview-card {

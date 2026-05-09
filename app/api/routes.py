@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db import crud
-from app.db.database import get_db
+from app.db.database import get_db, SessionLocal
 from app.models import (
     POISchema,
     POIListResponse,
@@ -32,7 +32,12 @@ route_service = RouteService(poi_service.graph)
 @router.on_event("startup")
 async def startup_event(db: Session = Depends(get_db)):
     """Initialize indexes and data structures on startup"""
-    pass
+    # initialize POI index and graph from the database at startup
+    db = SessionLocal()
+    try:
+        poi_service.initialize_poi_index(db)
+    finally:
+        db.close()
 
 
 # ==================== POI Endpoints ====================

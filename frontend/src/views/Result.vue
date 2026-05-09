@@ -39,7 +39,7 @@
           <div class="panel-head">
             <h2>{{ t('result.side.map') }}</h2>
           </div>
-          <div class="map-placeholder">Map canvas placeholder</div>
+          <div id="amap-container" style="width: 100%; height: 400px"></div>
         </a-card>
 
         <a-card class="result-panel days-panel" :bordered="false">
@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 // NavBar removed to prevent duplicate header
@@ -83,7 +83,10 @@ const { t } = useI18n()
 const showChat = ref(false)
 const chatMessages = ref<ChatMessage[]>([])
 
-import { getCurrentPlan } from '@/services/store'
+import { getCurrentPlan, setCurrentPlan } from '@/services/store'
+import { generateDemoPlan } from '@/services/api'
+import AMapLoader from '@amap/amap-jsapi-loader'
+import axios from 'axios'
 
 const planRef = getCurrentPlan()
 
@@ -102,4 +105,112 @@ const days = computed(() => {
 
 const goHome = () => void router.push('/')
 const noop = () => undefined
+
+const map = ref<any>(null)
+
+const initAMap = async () => {
+  await nextTick()
+  const mapJsKey = import.meta.env.VITE_AMAP_WEB_JS_KEY || ''
+  if (!mapJsKey) return
+
+  try {
+    const AMap = await AMapLoader.load({
+      key: mapJsKey,
+      version: '2.0',
+      plugins: ['AMap.Marker', 'AMap.Polyline']
+    })
+
+    map.value = new AMap.Map('amap-container', {
+      zoom: 12,
+      center: [116.397128, 39.916527]
+    })
+
+    // draw route if we have at least two attractions
+    const items = attractions.value || []
+    if (items.length >= 2) {
+      const start = items[0]
+      const end = items[items.length - 1]
+      try {
+        const res = await axios.get(`/api/routes/${start.id}/${end.id}`)
+        const path = res.data.path_nodes || []
+        if (path && path.length > 1) {
+          const coords = path.map((p: any) => [p.longitude, p.latitude])
+          const polyline = new AMap.Polyline({
+            path: coords,
+            borderWeight: 2,
+            strokeColor: '#1890ff',
+            lineJoin: 'round'
+          })
+          map.value.add(polyline)
+          map.value.setFitView([polyline])
+        } else if (items.length >= 2) {
+          // fallback draw straight line between start/end
+          const coords = [[start.longitude, start.latitude], [end.longitude, end.latitude]]
+          const polyline = new AMap.Polyline({ path: coords, strokeColor: '#1890ff' })
+          map.value.add(polyline)
+          map.value.setFitView([polyline])
+        }
+      } catch (e) {
+        console.warn('route draw failed', e)
+      }
+    }
+  } catch (err) {
+    console.error('AMap init failed', err)
+  }
+}
+
+onMounted(() => {
+  const plan = planRef.value
+  if (!plan) {
+    // fetch demo plan so map has attractions to render
+    generateDemoPlan()
+      .then((res: any) => {
+        if (res && res.data) {
+          // if backend demo has no attractions, fall back to using first two POIs
+          const hasAttractions = Array.isArray(res.data.days) && res.data.days.some((d: any) => (d.attractions || []).length > 0)
+          if (!hasAttractions) {
+            // fetch first two POIs from API and build a tiny plan
+            return axios.get('/api/pois?skip=0&limit=2').then((r) => {
+              const pois = r.data.items || r.data || []
+              if (Array.isArray(pois) && pois.length >= 2) {
+                const demo = {
+                  city: 'DemoCity',
+                  start_date: '2026-05-01',
+                  end_date: '2026-05-02',
+                  days: [
+                    {
+                      day_index: 0,
+                      attractions: [
+                        {
+                          id: pois[0].id,
+                          name: pois[0].name,
+                          latitude: pois[0].latitude,
+                          longitude: pois[0].longitude,
+                        },
+                        {
+                          id: pois[1].id,
+                          name: pois[1].name,
+                          latitude: pois[1].latitude,
+                          longitude: pois[1].longitude,
+                        },
+                      ],
+                    },
+                  ],
+                }
+                setCurrentPlan(demo)
+                initAMap()
+                return
+              }
+              initAMap()
+            })
+          }
+          setCurrentPlan(res.data)
+        }
+        initAMap()
+      })
+      .catch(() => initAMap())
+  } else {
+    initAMap()
+  }
+})
 </script>

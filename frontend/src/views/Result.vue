@@ -328,7 +328,7 @@ const recommendationReasons = computed(() => {
     reasons.push(`已结合你的偏好：${requestSummary.value.preferences.join('、')}。`)
   }
 
-  if (requestSummary.value?.data_mode === 'sample_fallback') {
+  if (requestSummary.value?.data_mode === 'local_sample') {
     reasons.push('当前目标城市样例还不完整，因此系统使用现有本地景点数据生成了可用行程。')
   } else {
     reasons.push('当前推荐优先命中了目标城市样例数据，结果更接近真实城市内游览。')

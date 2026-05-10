@@ -34,9 +34,10 @@ class Graph:
     def dijkstra(self, start_node_id: str, end_node_id: str) -> list[str]:
         """Return shortest path from start_node_id to end_node_id using Dijkstra's algorithm.
 
+        Uses handwritten MinHeap for priority queue (course requirement).
         Returns a list of node ids representing the path. If no path exists, returns an empty list.
         """
-        import heapq
+        from app.core.heap import MinHeap
 
         if start_node_id not in self.nodes or end_node_id not in self.nodes:
             return []
@@ -47,11 +48,14 @@ class Graph:
 
         distances[start_node_id] = 0.0
 
-        # priority queue of (distance, node_id)
-        heap: list[tuple[float, str]] = [(0.0, start_node_id)]
+        # Use handwritten MinHeap for priority queue
+        heap = MinHeap()
+        heap.push((0.0, start_node_id))
 
-        while heap:
-            current_dist, current = heapq.heappop(heap)
+        while len(heap) > 0:
+            current_dist, current = heap.pop()
+            if current_dist is None:
+                break
             if current_dist > distances[current]:
                 continue
             if current == end_node_id:
@@ -62,7 +66,7 @@ class Graph:
                 if new_dist < distances.get(neighbor, float("inf")):
                     distances[neighbor] = new_dist
                     previous[neighbor] = current
-                    heapq.heappush(heap, (new_dist, neighbor))
+                    heap.push((new_dist, neighbor))
 
         # reconstruct path
         if distances[end_node_id] == float("inf"):

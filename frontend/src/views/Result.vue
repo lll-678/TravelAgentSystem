@@ -142,9 +142,29 @@
         <a-card v-if="activePanel === 'map'" class="result-panel map-panel" :bordered="false">
           <div class="panel-head">
             <h2>{{ t('result.side.map') }}</h2>
+            <span v-if="mapStatus.isReady">{{ mapStatus.sourceLabel }}</span>
           </div>
-          <div v-if="planAvailable" id="amap-container" style="width: 100%; height: 400px"></div>
-          <div v-else class="graph-placeholder">请先返回首页生成行程，再查看地图路线。</div>
+          <div v-if="!planAvailable" class="graph-placeholder">请先返回首页生成行程，再查看地图路线。</div>
+          <div v-else-if="!hasMapKey" class="map-config-hint">
+            <div class="map-config-icon">🗺️</div>
+            <h3>地图服务未配置</h3>
+            <p>请在项目根目录创建 <code>.env.local</code> 文件，添加：</p>
+            <pre>VITE_AMAP_WEB_JS_KEY=你的高德地图JS Key</pre>
+            <p class="map-config-sub">获取 Key：<a href="https://console.amap.com/dev/key/app" target="_blank">高德地图开放平台</a></p>
+            <p class="map-config-sub">当前将显示简化版地图（直线连接）</p>
+            <div id="amap-container-fallback" style="width: 100%; height: 300px; margin-top: 16px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <div class="simple-map-fallback">
+                <div v-for="(item, idx) in attractions" :key="idx" class="simple-map-point" :style="getSimplePointStyle(idx)">
+                  <span class="point-marker">{{ idx + 1 }}</span>
+                  <span class="point-name">{{ item.name }}</span>
+                </div>
+                <svg class="simple-map-lines" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                  <line v-for="(line, idx) in simpleMapLines" :key="idx" :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2" stroke="#1890ff" stroke-width="2" stroke-dasharray="5,5" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div v-else id="amap-container" style="width: 100%; height: 400px"></div>
         </a-card>
 
         <a-card v-if="activePanel === 'days'" class="result-panel days-panel" :bordered="false">
@@ -279,6 +299,53 @@ const routeSummary = ref<{
   nodeCount: number
   sourceLabel: string
 } | null>(null)
+
+const mapStatus = ref({
+  isReady: false,
+  sourceLabel: '',
+  error: '',
+})
+
+const hasMapKey = computed(() => {
+  const key = import.meta.env.VITE_AMAP_WEB_JS_KEY
+  return key && key !== 'your_amap_web_js_key_here' && key.length > 10
+})
+
+const simpleMapLines = computed(() => {
+  const count = attractions.value.length
+  if (count < 2) return []
+  const lines = []
+  const containerWidth = 100
+  const containerHeight = 100
+  const centerX = containerWidth / 2
+  const centerY = containerHeight / 2
+  const radius = 35
+
+  for (let i = 0; i < count - 1; i++) {
+    const angle1 = (i / count) * 2 * Math.PI - Math.PI / 2
+    const angle2 = ((i + 1) / count) * 2 * Math.PI - Math.PI / 2
+    const x1 = centerX + radius * Math.cos(angle1)
+    const y1 = centerY + radius * Math.sin(angle1)
+    const x2 = centerX + radius * Math.cos(angle2)
+    const y2 = centerY + radius * Math.sin(angle2)
+    lines.push({ x1: `${x1}%`, y1: `${y1}%`, x2: `${x2}%`, y2: `${y2}%` })
+  }
+  return lines
+})
+
+const getSimplePointStyle = (idx: number) => {
+  const count = attractions.value.length || 1
+  const angle = (idx / count) * 2 * Math.PI - Math.PI / 2
+  const radius = 35
+  const x = 50 + radius * Math.cos(angle)
+  const y = 50 + radius * Math.sin(angle)
+  return {
+    position: 'absolute',
+    left: `${x}%`,
+    top: `${y}%`,
+    transform: 'translate(-50%, -50%)',
+  }
+}
 
 const planRef = getCurrentPlan()
 
@@ -498,11 +565,13 @@ const initAMap = async () => {
   await nextTick()
   if (!plan.value || attractions.value.length === 0) return
 
-  const mapJsKey = import.meta.env.VITE_AMAP_WEB_JS_KEY || ''
-  if (!mapJsKey) {
-    console.error('高德地图 JS Key 未配置，请在 .env.local 中设置 VITE_AMAP_WEB_JS_KEY')
+  if (!hasMapKey.value) {
+    console.warn('高德地图 JS Key 未配置，使用简化版地图')
+    mapStatus.value.error = '未配置高德地图 Key'
     return
   }
+
+  const mapJsKey = import.meta.env.VITE_AMAP_WEB_JS_KEY
 
   try {
     const AMap = await AMapLoader.load({
@@ -540,6 +609,8 @@ const initAMap = async () => {
       nodeCount: pathNodes.length,
       sourceLabel: routeData.source === 'amap' ? '高德路径' : '本地图算法路径',
     }
+    mapStatus.value.isReady = true
+    mapStatus.value.sourceLabel = routeData.source === 'amap' ? '高德路径' : '本地图算法路径'
 
     if (pathNodes.length > 1) {
       const coords = pathNodes.map((point: any) => [point.longitude, point.latitude])
@@ -580,6 +651,7 @@ const initAMap = async () => {
   } catch (error) {
     console.error('AMap 初始化失败:', error)
     routeSummary.value = null
+    mapStatus.value.error = '地图加载失败'
   }
 }
 
@@ -589,3 +661,82 @@ onMounted(() => {
   }
 })
 </script>
+
+<style scoped>
+.map-config-hint {
+  text-align: center;
+  padding: 24px;
+}
+
+.map-config-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.map-config-hint h3 {
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+.map-config-hint p {
+  margin: 8px 0;
+  color: #666;
+}
+
+.map-config-hint pre {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  text-align: left;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.map-config-sub {
+  font-size: 12px;
+  color: #999;
+}
+
+.map-config-sub a {
+  color: #1890ff;
+}
+
+.simple-map-fallback {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.simple-map-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.point-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1890ff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.4);
+}
+
+.point-name {
+  font-size: 10px;
+  color: #333;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>

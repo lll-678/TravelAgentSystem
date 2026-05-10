@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     debug: bool = False
     host: str = "0.0.0.0"
     port: int = 8000
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
     api_base_url: str = "http://localhost:8000"
     amap_web_api_key: str = Field(default="", validation_alias=AliasChoices("AMAP_WEB_API_KEY", "VITE_AMAP_WEB_KEY"))
     vite_amap_web_js_key: str = Field(default="", validation_alias=AliasChoices("VITE_AMAP_WEB_JS_KEY", "AMAP_WEB_JS_KEY"))

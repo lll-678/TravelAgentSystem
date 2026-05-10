@@ -315,6 +315,24 @@ def create_poi(poi: POISchema, db: Session = Depends(get_db)):
 
 
 # ==================== Route Planning Endpoints ====================
+@router.get("/routes/status", tags=["Route Planning"])
+def get_route_service_status():
+    """Get route planning service status including AMap configuration"""
+    settings = get_runtime_settings()
+    has_amap_key = bool(settings.get("amap_web_api_key"))
+
+    return {
+        "success": True,
+        "data": {
+            "amap_configured": has_amap_key,
+            "amap_key_preview": f"{settings.get('amap_web_api_key', '')[:6]}..." if has_amap_key else None,
+            "fallback_available": True,
+            "fallback_method": "dijkstra_with_handwritten_heap",
+            "message": "高德地图已配置" if has_amap_key else "高德地图未配置，将使用本地 Dijkstra 算法（手写 Heap）",
+        },
+    }
+
+
 @router.get("/routes/{start_poi_id}/{end_poi_id}", tags=["Route Planning"])
 def find_route(start_poi_id: int, end_poi_id: int, db: Session = Depends(get_db)):
     """Find shortest route between two POIs"""

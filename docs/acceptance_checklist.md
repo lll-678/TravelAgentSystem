@@ -46,7 +46,8 @@
 - [ ] Place search highlights a map item.
 - [x] Facility markers open an info window on click in `AMapView`.
 - [x] Building polygons clear old overlays before filters redraw.
-- [ ] Single-route planning returns path steps, distance, time, and mode.
+- [x] Single-route planning returns path steps, distance, time, and mode.
+- [x] Single-route planning uses seeded `map_nodes` / `map_edges` and Dijkstra instead of mock route data.
 - [x] Route scaffold is drawn as polyline on map.
 - [x] Route drawing calls fit-view behavior after rendering.
 - [ ] Multi-point planning returns optimized order and closed loop.

@@ -1,7 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
-from app.services.mock_map_service import get_route_plan
+from app.algorithms.route_planning import RouteNotFoundError
+from app.db.session import get_db
+from app.services.route_service import plan_route_from_db
 
 router = APIRouter()
 
@@ -16,5 +19,8 @@ class RoutePlanRequest(BaseModel):
 
 
 @router.post("/plan")
-def plan_route(payload: RoutePlanRequest) -> dict:
-    return get_route_plan(payload.model_dump())
+def plan_route(payload: RoutePlanRequest, db: Session = Depends(get_db)) -> dict:
+    try:
+        return plan_route_from_db(db, payload.model_dump())
+    except RouteNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

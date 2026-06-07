@@ -39,9 +39,12 @@ export interface MapGeoJsonPayload {
 }
 
 export interface RoutePlanPayload {
+  strategy: string;
+  mode: string;
   distance: number;
   duration: number;
   path: Coordinate[];
+  node_ids?: number[];
   steps: Array<{ text: string; distance: number }>;
   algorithm_trace: Record<string, string>;
 }

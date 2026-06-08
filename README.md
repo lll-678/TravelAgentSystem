@@ -2,13 +2,14 @@
 
 大型校园 / 景区智能导览平台 MVP。
 
-当前仓库处于 **Stage 18 facility and food query polish** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、室内导航、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、校园地图增密、拥挤度/交通方式路线策略、室内跨楼层导航、用户兴趣编辑和设施/美食查询打磨。
+当前仓库处于 **Stage 19 real data enrichment** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、室内导航、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、校园地图演示 seed、拥挤度/交通方式路线策略、室内跨楼层导航、用户兴趣编辑、设施/美食查询打磨，以及高德 Web Service 真实 POI 导入链路。
 
 ## Target Stack
 
 - Frontend: Vue 3 + Vite + TypeScript + Element Plus
 - Map UI: 高德地图 JS API + `@amap/amap-jsapi-loader`
 - Map data/routing topology: OpenStreetMap + OSMnx / Overpass
+- POI enrichment: 高德 Web Service Place Around API
 - Backend: FastAPI
 - Database: PostgreSQL + PostGIS
 - Cache: Redis
@@ -40,7 +41,13 @@ Set the AMap Web JS API key in `.env.local`:
 VITE_AMAP_KEY=your_amap_web_js_api_key
 ```
 
-The frontend uses AMap only for rendering. Backend map import, graph topology, route planning, and nearby-facility distance calculation still use OSMnx/OpenStreetMap data.
+Set the AMap Web Service key only when importing real POIs:
+
+```bash
+AMAP_WEB_API_KEY=your_amap_web_service_api_key
+```
+
+The frontend `VITE_AMAP_KEY` is used only for browser rendering. Backend route topology still comes from OSMnx/OpenStreetMap or the deterministic seed graph. Backend `AMAP_WEB_API_KEY` is optional and only enriches local `facilities` with real AMap POIs; it does not call AMap routing.
 
 Default campus:
 
@@ -99,6 +106,18 @@ bash scripts/smoke_features.sh
 
 These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 10 users, 200 destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 19 indoor nodes, 20 indoor edges, 12 restaurants, 72 foods, and 20 diaries.
 
+The deterministic seed is an offline demo fallback, not a claim of real campus POI density. To enrich facilities from real AMap POI data after seeding:
+
+```bash
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --radius 1800 --max-pages 3 --request-interval 0.5
+```
+
+Use `--reset-facilities` when you want AMap POIs to replace seeded facility points while keeping the existing road graph:
+
+```bash
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --radius 1800 --max-pages 5 --request-interval 0.5 --reset-facilities
+```
+
 The local backend reads API data from `API_DATABASE_URL`. For the SQLite demo path, run the backend from the repository root so the SQLite relative path matches `scripts/reset_dev_db.sh`:
 
 ```bash
@@ -124,6 +143,9 @@ curl 'http://127.0.0.1:8000/api/v1/recommendations?user_id=1&strategy=composite&
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
   -d '{"source":"fixture","reset_existing":true}'
+curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
+  -H 'Content-Type: application/json' \
+  -d '{"source":"amap_poi","dist":1800,"max_pages":3,"request_interval":0.5,"reset_existing":false}'
 curl 'http://127.0.0.1:8000/api/v1/diaries?limit=5'
 curl 'http://127.0.0.1:8000/api/v1/foods/recommend?limit=5'
 curl -X POST http://127.0.0.1:8000/api/v1/aigc/diary-draft \
@@ -139,6 +161,14 @@ PYTHONPATH=backend python backend/scripts/import_osm_campus.py --source osmnx
 ```
 
 If the configured `OSM_DEFAULT_PLACE` is not found by Nominatim, the importer falls back to `OSM_FALLBACK_LAT` / `OSM_FALLBACK_LNG` / `OSM_FALLBACK_DIST`.
+
+AMap POI import CLI:
+
+```bash
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --radius 1800 --max-pages 3 --request-interval 0.5
+```
+
+AMap POI import uses the official Place Around Web Service endpoint, converts returned GCJ-02 coordinates back to WGS84 for storage, classifies campus facilities, de-duplicates repeated keyword hits, binds each POI to the nearest local graph node, and backs off when AMap returns QPS limit code `10021`.
 
 ## Docs
 
@@ -164,6 +194,7 @@ If the configured `OSM_DEFAULT_PLACE` is not found by Nominatim, the importer fa
 - `docs/stage_15_indoor_navigation.md`: indoor graph and cross-floor route notes.
 - `docs/stage_16_user_preferences.md`: editable interests and recommendation refresh notes.
 - `docs/stage_18_query_polish.md`: facility category lookup and food search sorting notes.
+- `docs/stage_19_real_data_enrichment.md`: AMap POI real-data enrichment notes.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

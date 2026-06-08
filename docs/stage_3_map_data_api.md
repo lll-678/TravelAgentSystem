@@ -32,7 +32,7 @@ geojson.features[].geometry.coordinates: GeoJSON longitude/latitude order
 Current demo source:
 
 ```text
-source = database-seed-stage-3
+source = database-local-map-layers
 ```
 
 ## Validation
@@ -68,7 +68,8 @@ categories: 10
 
 - Real OSMnx / Overpass import was added in Stage 7, with fixture fallback and admin import/status APIs.
 - Routes and nearby facility distance were moved onto `map_nodes` / `map_edges` graph services in Stages 4 and 5.
-- Stage 13 increased the deterministic 北京邮电大学沙河校区 demo scale to 180 nodes, 641 edges, 60 buildings, and 120 facilities.
+- Stage 13 increased the deterministic 北京邮电大学沙河校区 fallback demo scale to 180 nodes, 641 edges, 60 buildings, and 120 facilities.
+- Stage 19 added an AMap Web Service POI import path for real facility enrichment.
 - Stage 13 also fixed AMap display drift by converting backend WGS84 coordinates to GCJ-02 in the frontend map component.
 
 ## Next Stage

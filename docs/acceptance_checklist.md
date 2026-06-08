@@ -13,6 +13,11 @@
 - [x] Seed users count >= 10.
 - [x] Destinations count >= 200.
 - [ ] At least one real OSM campus/scenic map can be imported.
+- [x] Deterministic campus seed is documented as offline fallback, not real collected data.
+- [x] AMap Web Service POI import path exists for real facility enrichment.
+- [x] AMap POI import converts GCJ-02 coordinates to backend WGS84 before storage.
+- [x] AMap POI import de-duplicates repeated keyword hits.
+- [x] AMap POI live import has been run with a real key and produced 516 new BUPT Shahe surrounding facility rows.
 - [x] `map_edges` count >= 450.
 - [x] `buildings` count >= 60.
 - [x] `facilities` count >= 120.
@@ -48,12 +53,12 @@
 - [x] AMap default center is `[116.28333, 40.15608]` for 北京邮电大学沙河校区.
 - [x] Backend GeoJSON coordinate contract is documented as `[lng, lat]` arrays for AMap overlays.
 - [x] AMap overlays convert backend WGS84 coordinates to GCJ-02 before rendering.
-- [x] `GET /api/v1/map/geojson` returns roads, buildings, facilities, categories, statistics, and GeoJSON from seeded DB rows.
+- [x] `GET /api/v1/map/geojson` returns roads, buildings, facilities, categories, statistics, and GeoJSON from local DB rows.
 - [ ] Place search highlights a map item.
 - [x] Facility markers open an info window on click in `AMapView`.
 - [x] Building polygons clear old overlays before filters redraw.
 - [x] Single-route planning returns path steps, distance, time, and mode.
-- [x] Single-route planning uses seeded `map_nodes` / `map_edges` and Dijkstra instead of mock route data.
+- [x] Single-route planning uses local `map_nodes` / `map_edges` and Dijkstra instead of mock route data.
 - [ ] Route target can be selected by destination/place/facility name, not only typed coordinates.
 - [x] Shortest-time routing uses per-edge congestion where real speed = congestion * ideal speed.
 - [x] Route planning filters by transport mode: walking, bicycle, electric cart, and mixed mode.

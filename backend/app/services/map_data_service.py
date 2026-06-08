@@ -64,7 +64,7 @@ def get_map_payload_from_db(session: Session) -> dict[str, Any]:
         "facilities": facilities,
         "facility_categories": categories,
         "geojson": _to_feature_collection(roads, buildings, facilities),
-        "source": "database-seed-stage-3",
+        "source": "database-local-map-layers",
     }
 
 

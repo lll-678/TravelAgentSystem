@@ -24,7 +24,7 @@ The main weakness is not API absence; it is requirement depth. Several features 
 | P1 | Diary recommendation | Uses views + rating Top-K | Does not use personal interest | Add user-interest overlap to diary score and expose reason |
 | P1 | Food destination scope | Cuisine filter, fuzzy search, heat/rating/distance sort, and Top-K scoring work | Food is not explicitly scoped to selected destination/school | Add destination/current-place context and destination linkage |
 | P1 | Map demo verification | AMap component exists and converts WGS84 to GCJ-02 | No browser/e2e screenshot proof because AMap key is environment-dependent | Add optional Playwright smoke guarded by `VITE_AMAP_KEY` |
-| P2 | Real map data richness | Dense deterministic BUPT seed; OSM import path exists | OSM POI/building data may still be sparse for campus | Optional AMap POI enrichment import into local DB |
+| P2 | Real map data richness | Dense deterministic BUPT seed is documented as offline fallback; OSM import path exists; AMap POI importer exists; live AMap import added 516 real facility rows locally | Building polygons and walkable campus topology may still be sparse if OSM data is incomplete | Keep OSM/manual graph data for routes and use AMap import for POI density |
 
 ## Requirement Coverage By Module
 
@@ -50,10 +50,10 @@ The main weakness is not API absence; it is requirement depth. Several features 
 1. Stage 17: diary search and media.
    Add media upload, exact title lookup, inverted/full-text search, and interest-aware diary recommendations.
 
-2. Stage 19: auth and behavior feedback.
+2. Stage 20: auth and behavior feedback.
    Add registration/login, favorites, destination ratings, and browsing behavior logs.
 
-3. Stage 20: destination-scoped food.
+3. Stage 21: destination-scoped food.
    Link restaurants/foods to destinations or map regions and filter food recommendations by selected destination/school.
 
 ## Harness Commands

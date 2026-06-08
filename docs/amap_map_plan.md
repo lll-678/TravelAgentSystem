@@ -2,15 +2,16 @@
 
 ## Goal
 
-Frontend map rendering uses AMap JS API. Backend map data, route planning, and road-distance calculations still use OSMnx/OpenStreetMap topology.
+Frontend map rendering uses AMap JS API. Backend route topology, route planning, and road-distance calculations still use local graph data imported from OSMnx/OpenStreetMap or the deterministic fallback graph. AMap Web Service can enrich local facility POIs, but it is not the routing source.
 
 ## Dependencies
 
 - Frontend package: `@amap/amap-jsapi-loader`
-- Environment variable: `VITE_AMAP_KEY`
-- Key source: `.env.local`; never hard-code the key in source files.
+- Frontend environment variable: `VITE_AMAP_KEY`
+- Backend POI import environment variable: `AMAP_WEB_API_KEY`
+- Key source: `.env.local`; never hard-code keys in source files.
 
-## Frontend Files To Add Later
+## Frontend Files
 
 ```text
 frontend/src/utils/amap.ts
@@ -50,8 +51,7 @@ Rendering rules:
 - Reads roads, buildings, and facilities.
 - Converts backend GeoJSON to AMap coordinate arrays.
 - Supports facility category filtering.
-- Current stage reads deterministic seeded DB rows shaped like campus map data.
-- Real OSMnx import is still planned and must keep the same frontend contract.
+- Reads local DB rows. Those rows may come from deterministic fallback seed, OSMnx import, or AMap POI enrichment.
 
 `RoutePlannerPage.vue`:
 
@@ -59,23 +59,26 @@ Rendering rules:
 - Reads route `path` or `path_geojson`.
 - Uses `AMapView` to draw the route polyline.
 - Shows total distance, estimated duration, and route steps.
-- Current stage uses mock route output until OSM graph routing is implemented.
+- Uses backend Dijkstra over local `map_nodes` and `map_edges`.
 
 `NearbyFacilitiesPage.vue`:
 
 - Calls `GET /api/v1/facilities/nearby`.
 - Draws nearby facilities as markers.
 - Clicking a facility can route to the planner or draw the route directly.
-- Current stage uses placeholder distance ranking until road-distance routing is implemented.
+- Uses category filtering plus Dijkstra graph distance ranking.
 
 ## Coordinate Rules
 
 - Backend GeoJSON follows longitude/latitude order.
 - AMap overlays require `[longitude, latitude]`.
 - Route path arrays should be normalized to `[lng, lat][]` before passing to `AMapView`.
+- Backend stores WGS84. Frontend converts WGS84 overlays to GCJ-02 for AMap rendering.
+- AMap Web Service POIs arrive as GCJ-02 and are converted back to WGS84 before storage.
 
 ## Backend Boundary
 
 - Do not use AMap routing as the backend route source.
 - Use OSMnx/OSM graph data for shortest path, route distance, route time, and nearby-facility road-distance sorting.
-- AMap is only the frontend rendering layer.
+- AMap JS API is the frontend rendering layer.
+- AMap Web Service is an optional real POI enrichment source for local facility rows.

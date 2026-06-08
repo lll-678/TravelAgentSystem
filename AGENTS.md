@@ -13,6 +13,7 @@ Smart Tour Guide: 大型校园 / 景区智能导览平台 MVP。
 - Cache: Redis
 - Search: PostgreSQL full-text / pg_trgm first
 - Map data and routing topology: OpenStreetMap via OSMnx / Overpass
+- Real POI enrichment: AMap Web Service Place Around API imported into local DB
 - Storage: local `media/`, replaceable by MinIO later
 - Deploy: Docker Compose + Nginx
 
@@ -34,7 +35,9 @@ tests/fixtures/     small shared fixtures for backend/frontend tests
 - Do not add new business features before updating `docs/feature_matrix.md`.
 - Do not hard-code secrets or API keys.
 - Do not hard-code the AMap Web JS API key; read it from `VITE_AMAP_KEY`.
-- Do not use AMap as the backend routing topology source; backend routes must use OSMnx/OSM graph data.
+- Do not hard-code the AMap Web Service key; read it from `AMAP_WEB_API_KEY`.
+- Do not use AMap as the backend routing topology source; AMap may enrich POIs, but backend routes must use OSMnx/OSM or local graph data.
+- Do not present deterministic seed points as real campus data. Label them as offline fallback/demo data.
 - Do not rely on remote services in required tests.
 - Do not commit generated databases, uploads, caches, `node_modules`, or build outputs.
 - Do not silently change public API paths without updating docs and checks.
@@ -43,6 +46,7 @@ tests/fixtures/     small shared fixtures for backend/frontend tests
 
 - Backend stores and plans routes using OSM/PostGIS data.
 - Frontend renders maps with AMap JS API.
+- Optional backend POI enrichment imports AMap GCJ-02 POIs, converts them to WGS84, and stores them as local facilities.
 - API coordinates are WGS84 longitude/latitude.
 - AMap overlays must receive `[lng, lat]`.
 - Default map center: `[116.28333, 40.15608]` for 北京邮电大学沙河校区.

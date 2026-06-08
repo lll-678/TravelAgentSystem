@@ -14,7 +14,13 @@ Run or show:
 bash scripts/smoke_features.sh
 ```
 
-Mention seeded data scale.
+Mention deterministic fallback seed scale, then explain the real-data import path:
+
+```bash
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --radius 1800 --max-pages 3 --request-interval 0.5
+```
+
+Only run the import live when `AMAP_WEB_API_KEY` and network access are available.
 
 ## 3. Home Recommendation
 

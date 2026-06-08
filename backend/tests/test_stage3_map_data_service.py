@@ -31,7 +31,7 @@ def test_map_payload_matches_amap_frontend_contract() -> None:
         payload = get_map_payload_from_db(session)
 
     assert payload["center"] == [116.28333, 40.15608]
-    assert payload["source"] == "database-seed-stage-3"
+    assert payload["source"] == "database-local-map-layers"
     assert len(payload["roads"]) == 641
     assert len(payload["buildings"]) == 60
     assert len(payload["facilities"]) == 120
@@ -65,7 +65,7 @@ def test_map_api_handlers_read_seeded_database() -> None:
         "categories": 10,
     }
 
-    assert payload["source"] == "database-seed-stage-3"
+    assert payload["source"] == "database-local-map-layers"
     assert payload["statistics"]["roads"] == 641
     assert payload["geojson"]["type"] == "FeatureCollection"
     assert len(payload["roads"]) == 641

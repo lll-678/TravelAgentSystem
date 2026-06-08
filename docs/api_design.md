@@ -49,6 +49,9 @@ Base path: `/api/v1`.
 - `GET /admin/stats`
 - `GET /admin/map/import/status`
 - `POST /admin/map/import`
+  - `source=fixture`: offline fallback payload
+  - `source=osmnx`: OSMnx road/building/POI import
+  - `source=amap_poi`: AMap Place Around facility enrichment, requires `AMAP_WEB_API_KEY`
 
 ## Response Rule
 

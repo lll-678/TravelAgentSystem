@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     osm_fallback_lat: float = Field(default=40.15608, alias="OSM_FALLBACK_LAT")
     osm_fallback_lng: float = Field(default=116.28333, alias="OSM_FALLBACK_LNG")
     osm_fallback_dist: int = Field(default=1500, alias="OSM_FALLBACK_DIST")
+    amap_web_api_key: str | None = Field(default=None, alias="AMAP_WEB_API_KEY")
 
     model_config = SettingsConfigDict(
         env_file=(".env", ".env.local"),

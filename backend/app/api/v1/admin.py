@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.session import get_db
 from app.models import Destination, Diary, Facility, Food, IndoorEdge, IndoorNode, Restaurant, User
+from app.services.amap_import_service import AMapPoiImportError, import_amap_pois_to_db
 from app.services.osm_import_service import (
     OsmImportError,
     build_osmnx_payload,
@@ -18,11 +19,14 @@ router = APIRouter()
 
 
 class MapImportRequest(BaseModel):
-    source: str = Field(default="fixture", description="fixture or osmnx")
+    source: str = Field(default="fixture", description="fixture, osmnx, or amap_poi")
     place_name: str | None = Field(default=None)
     center_lng: float | None = Field(default=None)
     center_lat: float | None = Field(default=None)
     dist: int | None = Field(default=None, ge=100, le=10000)
+    keywords: list[str] | None = Field(default=None)
+    max_pages: int = Field(default=3, ge=1, le=20)
+    request_interval: float = Field(default=0.3, ge=0, le=5)
     reset_existing: bool = Field(default=True)
 
 
@@ -61,10 +65,24 @@ def import_map(payload: MapImportRequest, db: Session = Depends(get_db)) -> dict
                 dist=payload.dist or settings.osm_fallback_dist,
             )
             return import_osm_payload_to_db(db, osm_payload, reset_existing=payload.reset_existing)
+        if payload.source == "amap_poi":
+            return import_amap_pois_to_db(
+                session=db,
+                api_key=settings.amap_web_api_key or "",
+                center_lng=payload.center_lng or settings.osm_fallback_lng,
+                center_lat=payload.center_lat or settings.osm_fallback_lat,
+                radius=payload.dist or settings.osm_fallback_dist,
+                keywords=payload.keywords,
+                max_pages=payload.max_pages,
+                reset_facilities=payload.reset_existing,
+                request_interval=payload.request_interval,
+            )
+    except AMapPoiImportError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except OsmImportError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"OSM import failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail=f"Map import failed: {exc}") from exc
 
     raise HTTPException(status_code=400, detail="Unsupported import source.")
 

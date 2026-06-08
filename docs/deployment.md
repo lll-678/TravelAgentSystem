@@ -40,6 +40,7 @@ Required local variables:
 - `OSM_FALLBACK_LAT`
 - `OSM_FALLBACK_LNG`
 - `OSM_FALLBACK_DIST`
+- `AMAP_WEB_API_KEY` only when running real AMap POI import
 
 ## Current Gap
 

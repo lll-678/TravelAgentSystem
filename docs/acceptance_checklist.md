@@ -13,9 +13,9 @@
 - [x] Seed users count >= 10.
 - [x] Destinations count >= 200.
 - [ ] At least one real OSM campus/scenic map can be imported.
-- [x] `map_edges` count >= 200.
-- [x] `buildings` count >= 20.
-- [x] `facilities` count >= 50.
+- [x] `map_edges` count >= 450.
+- [x] `buildings` count >= 60.
+- [x] `facilities` count >= 120.
 - [x] Facility categories count >= 10.
 - [x] `GET /api/v1/map/stats` reads the seeded database and returns map scale counts.
 - [x] OSM import pipeline can import an OSM-shaped payload into map tables.
@@ -44,6 +44,7 @@
 - [x] Backend map data and route topology boundary is documented as OSMnx/OpenStreetMap, not AMap routing.
 - [x] AMap default center is `[116.28333, 40.15608]` for 北京邮电大学沙河校区.
 - [x] Backend GeoJSON coordinate contract is documented as `[lng, lat]` arrays for AMap overlays.
+- [x] AMap overlays convert backend WGS84 coordinates to GCJ-02 before rendering.
 - [x] `GET /api/v1/map/geojson` returns roads, buildings, facilities, categories, statistics, and GeoJSON from seeded DB rows.
 - [ ] Place search highlights a map item.
 - [x] Facility markers open an info window on click in `AMapView`.

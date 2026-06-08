@@ -2,7 +2,7 @@
 
 大型校园 / 景区智能导览平台 MVP。
 
-当前仓库处于 **Stage 9 food, AIGC, and admin dashboard** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。
+当前仓库处于 **Stage 13 campus data density and AMap drift hardening** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。本阶段进一步增密北京邮电大学沙河校区演示地图，并在前端渲染前完成 WGS84 到 GCJ-02 坐标转换，解决高德底图上的覆盖物漂移问题。
 
 ## Target Stack
 
@@ -97,7 +97,7 @@ bash scripts/reset_dev_db.sh
 bash scripts/smoke_features.sh
 ```
 
-These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 10 users, 200 destinations, 80 map nodes, 220 map edges, 20 buildings, 50 facilities, 10 facility categories, 5 restaurants, 30 foods, and 20 diaries.
+These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 10 users, 200 destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 12 restaurants, 72 foods, and 20 diaries.
 
 The local backend reads API data from `API_DATABASE_URL`. For the SQLite demo path, run the backend from the repository root so the SQLite relative path matches `scripts/reset_dev_db.sh`:
 
@@ -158,6 +158,7 @@ If the configured `OSM_DEFAULT_PLACE` is not found by Nominatim, the importer fa
 - `docs/stage_10_final_docs.md`: final documentation and demo-readiness notes.
 - `docs/stage_11_mainline_hardening.md`: smoke, merge-marker, and frontend error-handling hardening notes.
 - `docs/stage_12_multi_point_routes.md`: multi-point route planning notes.
+- `docs/stage_13_campus_data_density.md`: campus data density and AMap coordinate drift notes.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

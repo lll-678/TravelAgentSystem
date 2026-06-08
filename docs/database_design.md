@@ -25,13 +25,13 @@
 ```text
 users: 10
 destinations: 200
-map_nodes: 80
-map_edges: 220
-buildings: 20
+map_nodes: 180
+map_edges: 641
+buildings: 60
 facility_categories: 10
-facilities: 50
-restaurants: 5
-foods: 30
+facilities: 120
+restaurants: 12
+foods: 72
 diaries: 20
 ```
 

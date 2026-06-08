@@ -57,25 +57,24 @@ curl http://127.0.0.1:8000/api/v1/map/stats
 Expected scale:
 
 ```text
-nodes: 80
-roads: 220
-buildings: 20
-facilities: 50
+nodes: 180
+roads: 641
+buildings: 60
+facilities: 120
 categories: 10
 ```
 
-## Known Gaps
+## Current Follow-up Status
 
-- Real OSMnx / Overpass import is not implemented.
-- Map data is deterministic seed data for 北京邮电大学沙河校区.
-- Routes and nearby facility distance are still scaffolded and not graph-backed.
-- Admin map import/status pages are still planned.
+- Real OSMnx / Overpass import was added in Stage 7, with fixture fallback and admin import/status APIs.
+- Routes and nearby facility distance were moved onto `map_nodes` / `map_edges` graph services in Stages 4 and 5.
+- Stage 13 increased the deterministic 北京邮电大学沙河校区 demo scale to 180 nodes, 641 edges, 60 buildings, and 120 facilities.
+- Stage 13 also fixed AMap display drift by converting backend WGS84 coordinates to GCJ-02 in the frontend map component.
 
 ## Next Stage
 
-Implement real route graph services on top of `map_nodes` and `map_edges`:
+The remaining map-data work is optional enrichment, not a blocker for the core demo:
 
-- nearest-node lookup
-- Dijkstra shortest path
-- route steps, distance, and time
-- nearby facilities sorted by graph distance
+- import more authoritative POI/building data if an AMap Web Service key is available
+- add an admin screen for inspecting and editing individual map objects
+- add browser-level visual regression checks for the AMap page when a valid key is configured

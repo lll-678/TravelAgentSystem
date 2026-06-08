@@ -12,13 +12,13 @@
 - Deterministic seed data added for the current campus:
   - users: 10
   - destinations: 200
-  - map nodes: 80
-  - map edges: 220
-  - buildings: 20
+  - map nodes: 180
+  - map edges: 641
+  - buildings: 60
   - facility categories: 10
-  - facilities: 50
-  - restaurants: 5
-  - foods: 30
+  - facilities: 120
+  - restaurants: 12
+  - foods: 72
   - diaries: 20
 - `scripts/reset_dev_db.sh` drops/recreates the dev schema and reseeds.
 - `scripts/seed_all.sh` is idempotent when data already exists.
@@ -37,4 +37,3 @@ bash scripts/check_all.sh
 - Dev seed defaults to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db`.
 - PostgreSQL/PostGIS remains the target deployment database.
 - Real OSMnx import is not implemented in this stage; seeded map data is deterministic mock data shaped like campus map data.
-

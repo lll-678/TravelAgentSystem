@@ -22,7 +22,7 @@ def test_food_list_search_recommend_and_nearby() -> None:
         seed_demo_data(session)
         restaurants = list_restaurants_from_db(session, limit=10, offset=0)
         items = list_food_items_from_db(session, cuisine="noodle", restaurant_id=None, limit=10, offset=0)
-        search = search_foods_from_db(session, q="推荐菜品 1", cuisine=None, limit=5)
+        search = search_foods_from_db(session, q="番茄牛腩面", cuisine=None, limit=5)
         recommend = recommend_foods_from_db(
             session=session,
             cuisine=None,
@@ -40,7 +40,7 @@ def test_food_list_search_recommend_and_nearby() -> None:
             limit=3,
         )
 
-    assert restaurants["total"] == 5
+    assert restaurants["total"] >= 12
     assert items["total"] > 0
     assert search["total"] >= 1
     assert len(recommend["items"]) == 5
@@ -73,7 +73,7 @@ def test_admin_stats_reports_core_table_counts() -> None:
         seed_demo_data(session)
         stats = admin_stats(session)
 
-    assert stats["map"]["nodes"] == 80
+    assert stats["map"]["nodes"] >= 180
     assert stats["tables"]["users"] == 10
-    assert stats["tables"]["foods"] == 30
+    assert stats["tables"]["foods"] >= 72
     assert stats["tables"]["diaries"] == 20

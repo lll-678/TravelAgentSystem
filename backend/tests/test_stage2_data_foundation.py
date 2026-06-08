@@ -37,9 +37,10 @@ def test_seed_demo_data_meets_stage2_scale() -> None:
 
         assert counts["users"] >= 10
         assert counts["destinations"] >= 200
-        assert counts["map_edges"] >= 200
-        assert counts["buildings"] >= 20
-        assert counts["facilities"] >= 50
+        assert counts["map_nodes"] >= 180
+        assert counts["map_edges"] >= 450
+        assert counts["buildings"] >= 60
+        assert counts["facilities"] >= 120
         assert counts["facility_categories"] >= 10
 
         first_destination = session.scalars(select(Destination).limit(1)).one()

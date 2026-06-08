@@ -15,10 +15,10 @@ def test_map_stats_are_read_from_seeded_database() -> None:
         seed_demo_data(session)
         stats = get_map_stats_from_db(session)
 
-    assert stats["nodes"] == 80
-    assert stats["roads"] == 220
-    assert stats["buildings"] == 20
-    assert stats["facilities"] == 50
+    assert stats["nodes"] == 180
+    assert stats["roads"] == 641
+    assert stats["buildings"] == 60
+    assert stats["facilities"] == 120
     assert stats["categories"] == 10
 
 
@@ -32,12 +32,12 @@ def test_map_payload_matches_amap_frontend_contract() -> None:
 
     assert payload["center"] == [116.28333, 40.15608]
     assert payload["source"] == "database-seed-stage-3"
-    assert len(payload["roads"]) == 220
-    assert len(payload["buildings"]) == 20
-    assert len(payload["facilities"]) == 50
+    assert len(payload["roads"]) == 641
+    assert len(payload["buildings"]) == 60
+    assert len(payload["facilities"]) == 120
     assert len(payload["facility_categories"]) == 10
     assert payload["geojson"]["type"] == "FeatureCollection"
-    assert len(payload["geojson"]["features"]) >= 220 + 20 + 50
+    assert len(payload["geojson"]["features"]) >= 641 + 60 + 120
 
     first_road = payload["roads"][0]
     assert isinstance(first_road["path"][0], list)
@@ -56,16 +56,16 @@ def test_map_api_handlers_read_seeded_database() -> None:
         facilities = map_api.get_map_facilities(session)
 
     assert stats == {
-        "nodes": 80,
-        "roads": 220,
-        "buildings": 20,
-        "facilities": 50,
+        "nodes": 180,
+        "roads": 641,
+        "buildings": 60,
+        "facilities": 120,
         "categories": 10,
     }
 
     assert payload["source"] == "database-seed-stage-3"
-    assert payload["statistics"]["roads"] == 220
+    assert payload["statistics"]["roads"] == 641
     assert payload["geojson"]["type"] == "FeatureCollection"
-    assert len(payload["roads"]) == 220
-    assert len(nodes) == 80
-    assert len(facilities) == 50
+    assert len(payload["roads"]) == 641
+    assert len(nodes) == 180
+    assert len(facilities) == 120

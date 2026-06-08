@@ -13,6 +13,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import type { BuildingItem, Coordinate, FacilityItem } from "../services/api";
 import { loadAMap } from "../utils/amap";
+import { pathToGcj02, pathsToGcj02, wgs84ToGcj02 } from "../utils/coordinates";
 
 const props = withDefaults(
   defineProps<{
@@ -49,7 +50,7 @@ function drawOverlays() {
 
   clearOverlays();
 
-  props.roadPaths.forEach((path) => {
+  pathsToGcj02(props.roadPaths).forEach((path) => {
     if (path.length < 2) return;
     const polyline = new AMap.Polyline({
       path,
@@ -62,7 +63,7 @@ function drawOverlays() {
 
   props.buildings.forEach((building) => {
     const polygon = new AMap.Polygon({
-      path: building.polygon,
+      path: pathToGcj02(building.polygon),
       fillColor: "#8fd3c7",
       fillOpacity: 0.38,
       strokeColor: "#188f7a",
@@ -72,8 +73,9 @@ function drawOverlays() {
   });
 
   props.facilities.forEach((facility) => {
+    const position = wgs84ToGcj02([facility.lng, facility.lat]);
     const marker = new AMap.Marker({
-      position: [facility.lng, facility.lat],
+      position,
       title: facility.name,
     });
     marker.on("click", () => {
@@ -84,7 +86,7 @@ function drawOverlays() {
       infoWindow.setContent(
         `<strong>${facility.name}</strong><div>${facility.category}</div>${description}`,
       );
-      infoWindow.open(map, [facility.lng, facility.lat]);
+      infoWindow.open(map, position);
     });
     overlays.push(marker);
   });
@@ -92,7 +94,7 @@ function drawOverlays() {
   let routePolyline: any = null;
   if (props.routePath.length >= 2) {
     routePolyline = new AMap.Polyline({
-      path: props.routePath,
+      path: pathToGcj02(props.routePath),
       strokeColor: "#2563eb",
       strokeWeight: 7,
       strokeOpacity: 0.92,
@@ -117,7 +119,7 @@ onMounted(async () => {
   try {
     AMap = await loadAMap();
     map = new AMap.Map(mapElement.value, {
-      center: [116.28333, 40.15608],
+      center: wgs84ToGcj02([116.28333, 40.15608]),
       zoom: 16,
       viewMode: "2D",
     });

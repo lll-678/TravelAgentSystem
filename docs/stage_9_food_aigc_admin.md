@@ -49,7 +49,11 @@ curl -X POST http://127.0.0.1:8000/api/v1/aigc/diary-draft \
 Admin stats:
 
 ```bash
-curl 'http://127.0.0.1:8000/api/v1/admin/stats'
+ADMIN_TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/v1/users/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username_or_email":"admin01","password":"admin123456"}' \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+curl -H "Authorization: Bearer $ADMIN_TOKEN" 'http://127.0.0.1:8000/api/v1/admin/stats'
 ```
 
 ## Validation
@@ -73,7 +77,7 @@ Expected backend result after this stage:
 ## Known Gaps
 
 - AIGC is deterministic mock logic; no external model API is called.
-- Admin page is a dashboard only. Editing, moderation, and real role-based access control remain planned.
+- Stage 31 adds role-based admin access control; this stage originally delivered the dashboard shell.
 - Food data still comes from deterministic seed rows.
 - Food search uses lightweight fuzzy matching, not PostgreSQL trigram/full-text search yet.
 

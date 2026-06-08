@@ -22,9 +22,15 @@
           </el-form>
           <div class="button-row">
             <el-button type="primary" :loading="authLoading" @click="login">登录</el-button>
+            <el-button @click="fillAdminLogin">管理员账号</el-button>
             <el-button :disabled="!token" @click="verifyToken">校验 Token</el-button>
           </div>
-          <p v-if="verifiedName" class="muted-text">Token 用户：{{ verifiedName }}</p>
+          <p v-if="verifiedName" class="muted-text">
+            Token 用户：{{ verifiedName }}
+            <el-tag size="small" :type="authState.role === 'admin' ? 'warning' : 'info'">
+              {{ roleLabel(authState.role) }}
+            </el-tag>
+          </p>
         </el-card>
 
         <el-card shadow="never" class="result-card">
@@ -125,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 
 import {
@@ -140,6 +146,7 @@ import {
   type UserListPayload,
   type UserProfilePayload,
 } from "../services/api";
+import { applyAuthPayload, authState, updateAuthUser } from "../services/auth";
 
 const users = ref<UserProfileItem[]>([]);
 const profile = ref<UserProfilePayload | null>(null);
@@ -150,7 +157,7 @@ const recommendations = ref<DestinationItem[]>([]);
 const saving = ref(false);
 const authLoading = ref(false);
 const loadingRecommendations = ref(false);
-const token = ref(localStorage.getItem("smart-tour-token") ?? "");
+const token = computed(() => authState.token);
 const verifiedName = ref("");
 const strategy = ref("behavior");
 const targetDestinationId = ref(1);
@@ -217,17 +224,26 @@ async function register() {
 }
 
 async function verifyToken() {
-  if (!token.value) return;
-  const payload = await apiGetWithAuth<UserProfilePayload>("/api/v1/users/me", token.value);
+  if (!authState.token) return;
+  const payload = await apiGetWithAuth<UserProfilePayload>("/api/v1/users/me", authState.token);
+  updateAuthUser(payload);
   verifiedName.value = `${payload.nickname} (${payload.username})`;
 }
 
 function applyAuth(payload: AuthPayload) {
-  token.value = payload.access_token;
-  localStorage.setItem("smart-tour-token", payload.access_token);
+  applyAuthPayload(payload);
   userId.value = payload.user.id;
   verifiedName.value = `${payload.user.nickname} (${payload.user.username})`;
   void loadProfile();
+}
+
+function roleLabel(role: string) {
+  return role === "admin" ? "管理员" : "普通用户";
+}
+
+function fillAdminLogin() {
+  loginForm.username_or_email = "admin01";
+  loginForm.password = "admin123456";
 }
 
 async function saveInterests() {

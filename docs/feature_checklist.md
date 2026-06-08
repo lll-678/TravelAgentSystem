@@ -16,6 +16,8 @@ Run this after `bash scripts/reset_dev_db.sh`.
 - [x] `GET /api/v1/recommendations`
 - [x] `GET /api/v1/users`
 - [x] `PUT /api/v1/users/{id}/interests`
+- [x] `POST /api/v1/users/login` returns `role=user|admin`
+- [x] `/api/v1/admin/*` requires admin bearer token
 - [x] `POST /api/v1/admin/map/import`
 - [x] `POST /api/v1/admin/map/import` with `source=amap_poi`
 - [x] `GET /api/v1/diaries`

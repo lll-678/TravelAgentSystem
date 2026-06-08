@@ -37,8 +37,13 @@ PYTHONPATH=backend python backend/scripts/import_amap_pois.py --radius 1800 --ma
 Admin API equivalent:
 
 ```bash
+ADMIN_TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/v1/users/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username_or_email":"admin01","password":"admin123456"}' \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"source":"amap_poi","dist":1800,"max_pages":3,"request_interval":0.5,"reset_existing":false}'
 ```
 

@@ -183,6 +183,7 @@ export interface UserProfileItem {
   id: number;
   username: string;
   email: string;
+  role: "user" | "admin";
   nickname: string;
   avatar_url: string | null;
   interests: string[];
@@ -207,6 +208,7 @@ export interface AuthPayload {
   access_token: string;
   token_type: string;
   expires_in_minutes: number;
+  role: "user" | "admin";
   user: UserProfileItem;
   algorithm_trace: Record<string, string>;
 }
@@ -397,6 +399,23 @@ export async function apiGetWithAuth<T>(path: string, token: string): Promise<T>
   }
 }
 
+export async function apiPostWithAuth<T>(path: string, body: unknown, token: string): Promise<T> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    return await parseResponse<T>(response);
+  } catch (error) {
+    notifyApiError(error);
+    throw error;
+  }
+}
+
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -439,10 +458,40 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   }
 }
 
+export async function apiPatchWithAuth<T>(path: string, body: unknown, token: string): Promise<T> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    return await parseResponse<T>(response);
+  } catch (error) {
+    notifyApiError(error);
+    throw error;
+  }
+}
+
 export async function apiDelete<T>(path: string): Promise<T> {
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method: "DELETE",
+    });
+    return await parseResponse<T>(response);
+  } catch (error) {
+    notifyApiError(error);
+    throw error;
+  }
+}
+
+export async function apiDeleteWithAuth<T>(path: string, token: string): Promise<T> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
     return await parseResponse<T>(response);
   } catch (error) {

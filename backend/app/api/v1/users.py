@@ -3,8 +3,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.models import User
 from app.services.user_service import (
+    ADMIN_ROLE,
     add_user_favorite_from_db,
+    get_user_model_from_token,
     get_user_from_token,
     get_user_profile_from_db,
     list_user_behavior_logs_from_db,
@@ -86,6 +89,20 @@ def get_current_user(authorization: str | None = Header(default=None), db: Sessi
     if profile is None:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
     return profile
+
+
+def get_current_user_model(authorization: str | None = Header(default=None), db: Session = Depends(get_db)) -> User:
+    token = _extract_bearer_token(authorization)
+    user = get_user_model_from_token(db, token)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    return user
+
+
+def require_admin(current_user: User = Depends(get_current_user_model)) -> User:
+    if current_user.role != ADMIN_ROLE:
+        raise HTTPException(status_code=403, detail="Admin role required.")
+    return current_user
 
 
 @router.get("")

@@ -6,11 +6,11 @@ Base path: `/api/v1`.
 
 - `POST /users/register`
 - `POST /users/login`
-  - planned response includes `role=user|admin`
+  - response includes `role=user|admin`
   - one login endpoint serves both normal users and admins
 - `GET /users/me`
   - requires bearer token
-  - planned response includes current user role
+  - response includes current user role
 
 ## Map And Routing
 
@@ -91,7 +91,7 @@ Destination recommendation/search is for tourist attractions and schools/campuse
   - `source=reference_campus`: offline WGS84 campus scene/topology import from `data/reference/bupt-shahe/`
   - `source=amap_poi`: AMap Place Around facility enrichment, requires `AMAP_WEB_API_KEY`
 
-Planned auth rule: all `/admin/*` endpoints require bearer token with `role=admin`. Missing/invalid token returns `401`; valid non-admin token returns `403`.
+Auth rule: all `/admin/*` endpoints require bearer token with `role=admin`. Missing/invalid token returns `401`; valid non-admin token returns `403`.
 
 ## Response Rule
 

@@ -34,7 +34,7 @@ from app.models import (
 )
 from app.algorithms.route_planning import approximate_distance_meters
 from app.services.diary_service import rebuild_diary_search_index
-from app.services.user_service import hash_password
+from app.services.user_service import ADMIN_ROLE, NORMAL_USER_ROLE, hash_password
 from app.seed.real_destinations import DESTINATION_SEED_SOURCE_NOTE, build_real_destination_seed
 from app.seed.sample_data import (
     BUPT_BUILDING_NAMES,
@@ -60,16 +60,29 @@ def seed_demo_data(session: Session) -> dict[str, int]:
 
     center_lng, center_lat = BUPT_SHAHE_CENTER
 
-    users = [
-        User(username=f"user{i:02d}", email=f"user{i:02d}@example.com", password_hash=hash_password("demo123456"))
+    normal_users = [
+        User(
+            username=f"user{i:02d}",
+            email=f"user{i:02d}@example.com",
+            password_hash=hash_password("demo123456"),
+            role=NORMAL_USER_ROLE,
+        )
         for i in range(1, 11)
     ]
+    admin_user = User(
+        username="admin01",
+        email="admin01@example.com",
+        password_hash=hash_password("admin123456"),
+        role=ADMIN_ROLE,
+    )
+    users = [*normal_users, admin_user]
     session.add_all(users)
     session.flush()
-    for index, user in enumerate(users):
+    for index, user in enumerate(normal_users):
         session.add(UserProfile(user_id=user.id, nickname=f"游客 {index + 1}", avatar_url=None))
         for tag in INTEREST_TAGS[index % len(INTEREST_TAGS) : index % len(INTEREST_TAGS) + 2]:
             session.add(UserInterest(user_id=user.id, tag=tag))
+    session.add(UserProfile(user_id=admin_user.id, nickname="管理员 1", avatar_url=None))
 
     destinations = _ensure_real_destinations(session)
 
@@ -200,7 +213,7 @@ def seed_demo_data(session: Session) -> dict[str, int]:
     session.add_all(foods)
     session.flush()
 
-    for index, user in enumerate(users):
+    for index, user in enumerate(normal_users):
         target_destination = destinations[(index * 3) % len(destinations)]
         target_food = foods[(index * 5) % len(foods)]
         session.add(
@@ -239,7 +252,7 @@ def seed_demo_data(session: Session) -> dict[str, int]:
 
     diaries = [
         Diary(
-            user_id=users[index % len(users)].id,
+            user_id=normal_users[index % len(normal_users)].id,
             destination_id=destinations[index].id,
             title=f"沙河校区游记 {index + 1}",
             body="这里是 Stage 2 的游记种子文本，用于后续全文检索和压缩功能。",
@@ -270,7 +283,16 @@ def seed_demo_data(session: Session) -> dict[str, int]:
 
 
 def ensure_incremental_demo_data(session: Session) -> None:
-    users = list(session.scalars(select(User).order_by(User.id).limit(10)).all())
+    _ensure_existing_user_roles(session)
+    _ensure_demo_admin(session)
+    users = list(
+        session.scalars(
+            select(User)
+            .where(User.role == NORMAL_USER_ROLE)
+            .order_by(User.id)
+            .limit(10)
+        ).all()
+    )
     destinations = _ensure_real_destinations(session)
     restaurants = list(session.scalars(select(Restaurant).order_by(Restaurant.id)).all())
     foods = list(session.scalars(select(Food).order_by(Food.id)).all())
@@ -351,6 +373,31 @@ def ensure_incremental_demo_data(session: Session) -> None:
                 for index in range(min(3, len(diaries)))
             ]
         )
+
+
+def _ensure_existing_user_roles(session: Session) -> None:
+    for user in session.scalars(select(User)).all():
+        if not user.role:
+            user.role = NORMAL_USER_ROLE
+
+
+def _ensure_demo_admin(session: Session) -> User:
+    admin = session.scalar(select(User).where(User.username == "admin01"))
+    if admin is None:
+        admin = User(
+            username="admin01",
+            email="admin01@example.com",
+            password_hash=hash_password("admin123456"),
+            role=ADMIN_ROLE,
+        )
+        session.add(admin)
+        session.flush()
+        session.add(UserProfile(user_id=admin.id, nickname="管理员 1", avatar_url=None))
+    else:
+        admin.role = ADMIN_ROLE
+        if admin.profile is None:
+            session.add(UserProfile(user_id=admin.id, nickname="管理员 1", avatar_url=None))
+    return admin
 
 
 def _ensure_real_destinations(session: Session) -> list[Destination]:

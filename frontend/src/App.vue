@@ -19,7 +19,7 @@
         <el-menu-item index="/diaries">游记社区</el-menu-item>
         <el-menu-item index="/foods">美食推荐</el-menu-item>
         <el-menu-item index="/aigc">AIGC 辅助</el-menu-item>
-        <el-menu-item index="/admin">管理后台</el-menu-item>
+        <el-menu-item v-if="isAdmin()" index="/admin">管理后台</el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
@@ -32,3 +32,7 @@
     </el-container>
   </el-container>
 </template>
+
+<script setup lang="ts">
+import { isAdmin } from "./services/auth";
+</script>

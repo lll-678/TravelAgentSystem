@@ -16,9 +16,13 @@ def drop_all(engine: Engine) -> None:
 
 def ensure_compatible_schema(engine: Engine) -> None:
     inspector = inspect(engine)
-    if "restaurants" not in inspector.get_table_names():
-        return
-    restaurant_columns = {column["name"] for column in inspector.get_columns("restaurants")}
-    if "destination_id" not in restaurant_columns:
-        with engine.begin() as connection:
-            connection.execute(text("ALTER TABLE restaurants ADD COLUMN destination_id INTEGER"))
+    table_names = set(inspector.get_table_names())
+    with engine.begin() as connection:
+        if "users" in table_names:
+            user_columns = {column["name"] for column in inspector.get_columns("users")}
+            if "role" not in user_columns:
+                connection.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR(32) NOT NULL DEFAULT 'user'"))
+        if "restaurants" in table_names:
+            restaurant_columns = {column["name"] for column in inspector.get_columns("restaurants")}
+            if "destination_id" not in restaurant_columns:
+                connection.execute(text("ALTER TABLE restaurants ADD COLUMN destination_id INTEGER"))

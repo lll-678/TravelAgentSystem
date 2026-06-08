@@ -18,6 +18,9 @@ from app.seed.sample_data import INTEREST_TAGS
 ALLOWED_TARGET_TYPES = {"destination", "food", "restaurant", "diary"}
 ALLOWED_ACTIONS = {"view", "search", "favorite", "rate", "route", "share", "recommend_click"}
 LEGACY_DEMO_PASSWORDS = {"demo123456", "password", "demo-password"}
+NORMAL_USER_ROLE = "user"
+ADMIN_ROLE = "admin"
+ALLOWED_ROLES = {NORMAL_USER_ROLE, ADMIN_ROLE}
 
 
 def list_users_from_db(session: Session) -> dict[str, Any]:
@@ -81,6 +84,7 @@ def register_user_from_db(
         username=normalized_username,
         email=normalized_email,
         password_hash=hash_password(password),
+        role=NORMAL_USER_ROLE,
     )
     session.add(user)
     session.flush()
@@ -109,10 +113,23 @@ def login_user_from_db(session: Session, username_or_email: str, password: str) 
 
 
 def get_user_from_token(session: Session, token: str) -> dict[str, Any] | None:
-    user_id = verify_access_token(token)
-    if user_id is None:
+    user = get_user_model_from_token(session, token)
+    if user is None:
         return None
-    return get_user_profile_from_db(session, user_id)
+    return get_user_profile_from_db(session, user.id)
+
+
+def get_user_model_from_token(session: Session, token: str) -> User | None:
+    payload = verify_access_token_payload(token)
+    if payload is None:
+        return None
+    user_id = payload.get("sub")
+    if not isinstance(user_id, int):
+        return None
+    user = _get_user(session, user_id)
+    if user is None or not user.is_active:
+        return None
+    return user
 
 
 def add_user_favorite_from_db(
@@ -288,10 +305,11 @@ def verify_password(password: str, password_hash: str) -> bool:
     return hmac.compare_digest(candidate, digest)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, role: str = NORMAL_USER_ROLE) -> str:
     expires_at = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {
         "sub": user_id,
+        "role": _normalize_role(role),
         "exp": int(expires_at.timestamp()),
     }
     payload_text = json.dumps(payload, separators=(",", ":"), sort_keys=True)
@@ -300,7 +318,7 @@ def create_access_token(user_id: int) -> str:
     return f"{payload_token}.{_base64url_encode(signature)}"
 
 
-def verify_access_token(token: str) -> int | None:
+def verify_access_token_payload(token: str) -> dict[str, Any] | None:
     try:
         payload_token, signature_token = token.split(".", 1)
     except ValueError:
@@ -313,6 +331,17 @@ def verify_access_token(token: str) -> int | None:
     except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
         return None
     if int(payload.get("exp", 0)) < int(datetime.now(UTC).timestamp()):
+        return None
+    if "role" not in payload:
+        payload["role"] = NORMAL_USER_ROLE
+    if payload["role"] not in ALLOWED_ROLES:
+        return None
+    return payload
+
+
+def verify_access_token(token: str) -> int | None:
+    payload = verify_access_token_payload(token)
+    if payload is None:
         return None
     user_id = payload.get("sub")
     return int(user_id) if isinstance(user_id, int) else None
@@ -353,6 +382,7 @@ def _serialize_user(user: User, session: Session | None = None, include_activity
         "id": user.id,
         "username": user.username,
         "email": user.email,
+        "role": _normalize_role(user.role),
         "nickname": user.profile.nickname if user.profile else user.username,
         "avatar_url": user.profile.avatar_url if user.profile else None,
         "interests": sorted({interest.tag for interest in user.interests}),
@@ -383,15 +413,21 @@ def _normalize_interests(interests: list[str]) -> list[str]:
     return normalized
 
 
+def _normalize_role(role: str | None) -> str:
+    value = (role or NORMAL_USER_ROLE).strip().casefold()
+    return value if value in ALLOWED_ROLES else NORMAL_USER_ROLE
+
+
 def _build_auth_payload(user: User) -> dict[str, Any]:
     return {
-        "access_token": create_access_token(user.id),
+        "access_token": create_access_token(user.id, user.role),
         "token_type": "bearer",
         "expires_in_minutes": settings.access_token_expire_minutes,
+        "role": _normalize_role(user.role),
         "user": _serialize_user(user, include_activity=False),
         "algorithm_trace": {
-            "stage": "stage-23-user-feedback-loop",
-            "auth": "standard-library PBKDF2 password hash plus HMAC signed demo token",
+            "stage": "stage-31-admin-user-auth",
+            "auth": "PBKDF2 password hash plus HMAC signed role-aware demo token",
         },
     }
 

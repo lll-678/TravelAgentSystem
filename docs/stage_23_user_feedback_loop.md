@@ -49,4 +49,4 @@ Expected:
 
 - Token auth is a deterministic course-demo HMAC token, not a full production OAuth/JWT stack.
 - Frontend uses demo user `user01` by default so the system remains easy to demonstrate offline.
-- Admin/user role separation is planned in `docs/stage_31_admin_user_auth_plan.md`.
+- Admin/user role separation is implemented in `docs/stage_31_admin_user_auth.md`.

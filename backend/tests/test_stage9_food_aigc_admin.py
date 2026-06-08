@@ -109,7 +109,7 @@ def test_admin_stats_reports_core_table_counts() -> None:
         stats = admin_stats(session)
 
     assert stats["map"]["nodes"] >= 180
-    assert stats["tables"]["users"] == 10
+    assert stats["tables"]["users"] >= 11
     assert stats["tables"]["foods"] >= 72
     assert stats["tables"]["diaries"] == 20
     assert stats["tables"]["indoor_nodes"] >= 19

@@ -33,7 +33,8 @@ def test_user_profile_api_lists_available_interests() -> None:
         users = list_users(session)
         profile = get_user_profile(1, session)
 
-    assert users["total"] == 10
+    assert users["total"] >= 11
+    assert any(user["username"] == "admin01" and user["role"] == "admin" for user in users["items"])
     assert "food" in users["available_interests"]
     assert profile["id"] == 1
     assert profile["interests"]
@@ -87,8 +88,12 @@ def test_register_login_and_token_profile_flow() -> None:
         profile = get_current_user(f"Bearer {logged_in['access_token']}", session)
 
     assert registered["user"]["username"] == "new_user"
+    assert registered["user"]["role"] == "user"
+    assert registered["role"] == "user"
     assert logged_in["token_type"] == "bearer"
+    assert logged_in["role"] == "user"
     assert profile["username"] == "new_user"
+    assert profile["role"] == "user"
     assert profile["interests"] == ["food", "sports"]
 
 

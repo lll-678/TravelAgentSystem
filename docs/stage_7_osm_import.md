@@ -24,11 +24,21 @@ This stage fills the project plan's third-phase gap: OSM map data import. Requir
 
 ## API Contracts
 
+After Stage 31, admin API calls require an admin bearer token:
+
+```bash
+ADMIN_TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/v1/users/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username_or_email":"admin01","password":"admin123456"}' \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+```
+
 Offline fixture import:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"source":"fixture","reset_existing":true}'
 ```
 
@@ -37,6 +47,7 @@ Real OSMnx import:
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"source":"osmnx","place_name":"Beijing University of Posts and Telecommunications Shahe Campus, Beijing, China","reset_existing":true}'
 ```
 

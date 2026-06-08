@@ -10,7 +10,7 @@
   - diaries
   - restaurants, foods
 - Deterministic seed data added for tourism recommendation and campus navigation:
-  - users: 10
+  - users: 11 after Stage 31, including 10 normal users and 1 admin
   - destinations: 207 real China attraction/university rows
   - map nodes: 180
   - map edges: 641

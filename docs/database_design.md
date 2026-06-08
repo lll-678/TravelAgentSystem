@@ -4,7 +4,7 @@
 
 | Table | Purpose |
 | --- | --- |
-| `users` | demo accounts; planned `role=user|admin` |
+| `users` | demo accounts with `role=user|admin` |
 | `user_profiles` | nickname/avatar |
 | `user_interests` | recommendation interests |
 | `destinations` | searchable/recommendable real attractions and schools |
@@ -66,7 +66,7 @@ duration = distance / (ideal_speed * congestion)
 ## Demo Seed Counts
 
 ```text
-users: 10
+users: 11, including 10 normal users and 1 admin
 destinations: 207 real attraction/university rows
 map_nodes: 180
 map_edges: 641

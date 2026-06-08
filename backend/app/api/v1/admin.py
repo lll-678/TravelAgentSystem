@@ -42,8 +42,9 @@ from app.services.reference_campus_import_service import (
     ReferenceCampusImportError,
     import_reference_campus_to_db,
 )
+from app.api.v1.users import require_admin
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin)])
 
 
 class MapImportRequest(BaseModel):

@@ -11,6 +11,7 @@ import MapGuidePage from "../pages/MapGuidePage.vue";
 import NearbyFacilitiesPage from "../pages/NearbyFacilitiesPage.vue";
 import RoutePlannerPage from "../pages/RoutePlannerPage.vue";
 import UserPreferencePage from "../pages/UserPreferencePage.vue";
+import { isAdmin } from "../services/auth";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,8 +26,15 @@ const router = createRouter({
     { path: "/diaries", name: "diaries", component: DiaryCommunityPage },
     { path: "/foods", name: "foods", component: FoodRecommendPage },
     { path: "/aigc", name: "aigc", component: AigcAssistantPage },
-    { path: "/admin", name: "admin", component: AdminDashboardPage },
+    { path: "/admin", name: "admin", component: AdminDashboardPage, meta: { requiresAdmin: true } },
   ],
+});
+
+router.beforeEach((to) => {
+  if (to.meta.requiresAdmin && !isAdmin()) {
+    return "/profile";
+  }
+  return true;
 });
 
 export default router;

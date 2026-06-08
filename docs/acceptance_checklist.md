@@ -41,8 +41,8 @@
 
 - [x] User can register.
 - [x] User can log in and receive token.
-- [ ] Login response includes `role=user|admin`.
-- [ ] Seed data includes one normal user account and one admin account.
+- [x] Login response includes `role=user|admin`.
+- [x] Seed data includes one normal user account and one admin account.
 - [x] Profile shows nickname, avatar, interests, favorites.
 - [x] Profile shows nickname and interests.
 - [x] User can edit interests from the frontend.
@@ -145,10 +145,10 @@
 - [x] Admin dashboard shows user/destination/map/diary/food counts.
 - [x] Admin can inspect OSM import status and data scale.
 - [x] Admin can moderate diaries and edit destinations/facilities/foods.
-- [ ] Admin dashboard requires `role=admin`.
-- [ ] Normal user token receives `403` from `/api/v1/admin/*`.
-- [ ] Missing admin token receives `401` from `/api/v1/admin/*`.
-- [ ] Frontend hides admin navigation for normal users.
+- [x] Admin dashboard requires `role=admin`.
+- [x] Normal user token receives `403` from `/api/v1/admin/*`.
+- [x] Missing admin token receives `401` from `/api/v1/admin/*`.
+- [x] Frontend hides admin navigation for normal users.
 
 ## Docs And Tests
 

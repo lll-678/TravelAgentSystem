@@ -132,13 +132,14 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 
 import {
-  apiDelete,
-  apiGet,
-  apiPatch,
+  apiDeleteWithAuth,
+  apiGetWithAuth,
+  apiPatchWithAuth,
   type AdminDiaryItem,
   type AdminDiaryListPayload,
   type AdminStatsPayload,
 } from "../services/api";
+import { authState } from "../services/auth";
 
 const loading = ref(false);
 const loadingDiaries = ref(false);
@@ -174,7 +175,7 @@ async function refreshAll() {
 async function loadStats() {
   loading.value = true;
   try {
-    stats.value = await apiGet<AdminStatsPayload>("/api/v1/admin/stats");
+    stats.value = await apiGetWithAuth<AdminStatsPayload>("/api/v1/admin/stats", adminToken());
   } finally {
     loading.value = false;
   }
@@ -183,7 +184,7 @@ async function loadStats() {
 async function loadDiaries() {
   loadingDiaries.value = true;
   try {
-    const payload = await apiGet<AdminDiaryListPayload>("/api/v1/admin/diaries?limit=10");
+    const payload = await apiGetWithAuth<AdminDiaryListPayload>("/api/v1/admin/diaries?limit=10", adminToken());
     diaries.value = payload.items;
   } finally {
     loadingDiaries.value = false;
@@ -191,45 +192,52 @@ async function loadDiaries() {
 }
 
 async function updateDestination() {
-  await apiPatch(`/api/v1/admin/destinations/${destinationForm.id}`, {
+  await apiPatchWithAuth(`/api/v1/admin/destinations/${destinationForm.id}`, {
     name: destinationForm.name,
     category: destinationForm.category,
     popularity: destinationForm.popularity,
     tags: destinationForm.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-  });
+  }, adminToken());
   await loadStats();
   ElMessage.success("目的地已更新");
 }
 
 async function updateFacility() {
-  await apiPatch(`/api/v1/admin/facilities/${facilityForm.id}`, {
+  await apiPatchWithAuth(`/api/v1/admin/facilities/${facilityForm.id}`, {
     name: facilityForm.name,
     category_code: facilityForm.category_code,
     description: facilityForm.description,
-  });
+  }, adminToken());
   await loadStats();
   ElMessage.success("设施已更新");
 }
 
 async function updateFood() {
-  await apiPatch(`/api/v1/admin/foods/${foodForm.id}`, {
+  await apiPatchWithAuth(`/api/v1/admin/foods/${foodForm.id}`, {
     name: foodForm.name,
     cuisine: foodForm.cuisine,
     price: foodForm.price,
     heat: foodForm.heat,
-  });
+  }, adminToken());
   await loadStats();
   ElMessage.success("美食已更新");
 }
 
 async function deleteDiary(diaryId: number) {
-  await apiDelete(`/api/v1/admin/diaries/${diaryId}`);
+  await apiDeleteWithAuth(`/api/v1/admin/diaries/${diaryId}`, adminToken());
   await refreshAll();
   ElMessage.success("游记已删除");
 }
 
 function toRows(record: Record<string, number>) {
   return Object.entries(record).map(([name, count]) => ({ name, count }));
+}
+
+function adminToken() {
+  if (!authState.token || authState.role !== "admin") {
+    throw new Error("需要管理员登录。");
+  }
+  return authState.token;
 }
 
 onMounted(() => {

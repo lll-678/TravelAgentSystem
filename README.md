@@ -2,7 +2,7 @@
 
 景点/学校推荐 + 校园内部导航平台 MVP。
 
-当前仓库处于 **Stage 31 admin/user auth plan** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层、北邮沙河参考校园拓扑导入、双 POI 数据集、游记管理/交流的讲义要求对齐，以及管理员/普通用户角色登录方案。
+当前仓库处于 **Stage 31 admin/user auth** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层、北邮沙河参考校园拓扑导入、双 POI 数据集、游记管理/交流的讲义要求对齐，以及管理员/普通用户角色登录与后台权限保护。
 
 Scope clarification:
 
@@ -125,7 +125,7 @@ bash scripts/smoke_features.sh
 bash scripts/clean_demo_map_layers.sh
 ```
 
-These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 10 users, 207 real China attraction/university destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 19 indoor nodes, 20 indoor edges, 12 restaurants, 72 foods, 20 diaries, and sample user feedback rows.
+These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 11 users, including `user01` as a normal user and `admin01` as an admin, 207 real China attraction/university destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 19 indoor nodes, 20 indoor edges, 12 restaurants, 72 foods, 20 diaries, and sample user feedback rows.
 
 `bash scripts/seed_all.sh` is incremental once a dev DB already exists: it creates missing tables/columns, upgrades old `北邮沙河导览点` destination rows to real attraction/university rows, assigns existing restaurants to nearby destinations, and backfills sample favorites/ratings/behavior logs without deleting real imported AMap facilities.
 
@@ -222,6 +222,10 @@ curl 'http://127.0.0.1:8000/api/v1/recommendations?user_id=1&strategy=composite&
 curl -X POST http://127.0.0.1:8000/api/v1/users/login \
   -H 'Content-Type: application/json' \
   -d '{"username_or_email":"user01","password":"demo123456"}'
+ADMIN_TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/v1/users/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username_or_email":"admin01","password":"admin123456"}' \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
 curl -X POST http://127.0.0.1:8000/api/v1/users/1/favorites \
   -H 'Content-Type: application/json' \
   -d '{"target_type":"destination","target_id":120,"note":"demo favorite"}'
@@ -234,23 +238,27 @@ curl -X POST http://127.0.0.1:8000/api/v1/users/1/behavior \
 curl 'http://127.0.0.1:8000/api/v1/recommendations?user_id=1&strategy=behavior&limit=10'
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"source":"fixture","reset_existing":true}'
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"source":"amap_poi","dist":1800,"max_pages":3,"request_interval":0.5,"reset_existing":false}'
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"source":"reference_campus","reset_existing":true}'
 curl 'http://127.0.0.1:8000/api/v1/diaries?limit=5'
 curl 'http://127.0.0.1:8000/api/v1/foods/recommend?destination_id=1&limit=5'
 curl -X POST http://127.0.0.1:8000/api/v1/aigc/diary-draft \
   -H 'Content-Type: application/json' \
   -d '{"topic":"沙河校区路线","keywords":["食堂","图书馆"],"tone":"自然"}'
-curl 'http://127.0.0.1:8000/api/v1/admin/stats'
+curl -H "Authorization: Bearer $ADMIN_TOKEN" 'http://127.0.0.1:8000/api/v1/admin/stats'
 curl -X PATCH http://127.0.0.1:8000/api/v1/admin/destinations/1 \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"name":"后台更新目的地","popularity":999,"tags":["food","study"]}'
-curl 'http://127.0.0.1:8000/api/v1/admin/diaries?limit=5'
+curl -H "Authorization: Bearer $ADMIN_TOKEN" 'http://127.0.0.1:8000/api/v1/admin/diaries?limit=5'
 ```
 
 OSMnx import CLI:
@@ -312,7 +320,7 @@ python backend/scripts/smoke_amap_route.py
 - `docs/stage_28_reference_campus_navigation.md`: supplied BUPT reference topology import and verification notes.
 - `docs/stage_29_dual_poi_sources.md`: separate nearby-facility and campus-navigation POI source workflows.
 - `docs/stage_30_diary_requirement_alignment.md`: diary management/community requirement mapping and next implementation focus.
-- `docs/stage_31_admin_user_auth_plan.md`: role-aware user/admin login-state plan and acceptance criteria.
+- `docs/stage_31_admin_user_auth.md`: role-aware user/admin login-state implementation notes and acceptance criteria.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

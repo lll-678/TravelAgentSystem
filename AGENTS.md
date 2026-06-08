@@ -2,7 +2,7 @@
 
 ## Project
 
-Smart Tour Guide: 大型校园 / 景区智能导览平台 MVP。
+Smart Tour Guide: 景点/学校推荐 + 校园内部导航 MVP。
 
 ## Target Stack
 
@@ -44,6 +44,9 @@ tests/fixtures/     small shared fixtures for backend/frontend tests
 
 ## Map Contract
 
+- Destination recommendation covers attractions and schools/campuses.
+- Campus buildings/facilities are route and map entities, not tourism recommendation candidates unless also modeled in `destinations`.
+- Navigation features are school/campus-internal after a campus destination is selected.
 - Backend stores and plans routes using OSM/PostGIS data.
 - Frontend renders maps with AMap JS API.
 - Optional backend POI enrichment imports AMap GCJ-02 POIs, converts them to WGS84, and stores them as local facilities.

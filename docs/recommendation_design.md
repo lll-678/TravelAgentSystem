@@ -1,5 +1,14 @@
 # Recommendation Design
 
+## Scope Clarification
+
+The course requirement separates two scopes:
+
+- Destination recommendation is city/regional level: recommend tourist attractions and schools.
+- Campus navigation is internal level: after a school/campus is selected, routing, facilities, buildings, and indoor navigation operate inside that campus map.
+
+Do not treat campus buildings or facilities as tourism recommendation candidates unless they are explicitly modeled as destination records.
+
 ## Destination Recommendation
 
 API: `GET /api/v1/recommendations`.
@@ -12,7 +21,23 @@ Score factors:
 - distance to current point
 - freshness seed factor
 
-The service ranks candidates with a Top-K heap helper and returns `score` plus `reason`.
+Candidate data:
+
+- `destinations` contains scenic attractions and schools/campuses.
+- destination tags describe tourism interest, school type, scenery, culture, transport convenience, and visit style.
+- user interests select preferred attraction/school categories before recommendation.
+
+The service ranks candidates with a Top-K heap helper and returns `score` plus `reason`. This matches the requirement that users usually inspect only the Top 10 results and the system should avoid full sorting when possible.
+
+## Destination Search
+
+Search targets:
+
+- attraction/school name
+- destination category
+- interest tags and keywords
+
+Search results can be sorted by popularity or rating. Place search may still include buildings/facilities for map and route input, but that is a separate campus navigation workflow, not the tourism recommendation candidate pool.
 
 ## Food Recommendation
 

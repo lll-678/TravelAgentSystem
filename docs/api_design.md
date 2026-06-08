@@ -10,6 +10,7 @@ Base path: `/api/v1`.
   - accepts `start_place_id` / `end_place_id` from `GET /search/places`
   - keeps `start_lng/start_lat/end_lng/end_lat` as coordinate fallback
   - supports `route_source=auto|amap_walking|local_graph`
+  - used for school/campus-internal navigation, not cross-city attraction travel
 - `POST /routes/multi-point`
   - each point accepts `place_id` or coordinate fallback
   - passes `route_source` to each route leg
@@ -21,6 +22,8 @@ Base path: `/api/v1`.
 - `GET /destinations/{id}`
 - `GET /search/places`
 - `GET /recommendations`
+
+Destination recommendation/search is for tourist attractions and schools/campuses. `GET /search/places` may also return campus buildings and facilities so route pages can choose internal endpoints.
 
 ## Diaries
 

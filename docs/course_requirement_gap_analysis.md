@@ -4,7 +4,7 @@ Source: `要求.md`. The current source file contains a complete functional-requ
 
 ## Overall Judgment
 
-The project has a runnable MVP for the main demo chain: destination recommendation, destination search, map display, single-route planning, multi-point route planning, nearby facilities, diary community, diary compression, food recommendation, AIGC placeholder, and admin stats.
+The project has a runnable MVP for the main demo chain: attraction/school destination recommendation, destination search, campus map display, campus-internal single-route planning, multi-point route planning, nearby facilities, diary community, diary compression, food recommendation, AIGC placeholder, and admin stats.
 
 The main weakness is no longer API absence; it is browser-level verification depth. Several features are still simplified demos where the course requirement asks for verified real map interaction:
 
@@ -21,10 +21,10 @@ The main weakness is no longer API absence; it is browser-level verification dep
 
 | Requirement Module | Coverage | Notes |
 | --- | --- | --- |
-| 旅游推荐 | Mostly covered | Top-K heap, hot/rating/interest/behavior strategies, editable interests, favorites, ratings, browse logs, and recommendation refresh exist. |
-| 景点/学校查询 | Mostly covered | Destination list supports keyword/category and hot/rating sort. Cross-source search does not yet sort all result types by heat/rating. |
-| 单点路线规划 | Mostly covered | Place-name start/end selection works. Walking routes can use AMap real route geometry; local Dijkstra remains available for algorithm demo. |
-| 多点路线规划 | Partial | Greedy multi-point route exists and supports return-to-start, place IDs, and per-leg route source selection. Candidate ordering is still greedy approximation. |
+| 旅游推荐 | Mostly covered | Recommendation candidates are destination records, covering attractions and schools/campuses. Top-K heap, hot/rating/interest/behavior strategies, editable interests, favorites, ratings, browse logs, and recommendation refresh exist. |
+| 景点/学校查询 | Mostly covered | Destination list supports attraction/school keyword/category and hot/rating sort. Cross-source place search also returns campus buildings/facilities for route input, but these are not tourism recommendation candidates. |
+| 单点路线规划 | Mostly covered | Navigation is campus-internal after selecting a school/campus map. Place-name start/end selection works. Walking routes can use AMap real route geometry; local Dijkstra remains available for algorithm demo. |
+| 多点路线规划 | Partial | Greedy multi-point route exists for campus-internal route planning and supports return-to-start, place IDs, and per-leg route source selection. Candidate ordering is still greedy approximation. |
 | 最短时间/拥挤度 | Covered for demo | `shortest_time` uses duration computed from per-edge congestion and ideal speed. |
 | 交通工具策略 | Covered for demo | Route planning filters walking, bicycle, electric-cart, and mixed-mode edges. |
 | 室内导航 | Covered for demo | Indoor nodes/edges, cross-floor Dijkstra, elevator/stair steps, and frontend page are implemented. |

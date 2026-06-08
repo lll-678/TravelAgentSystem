@@ -41,14 +41,17 @@
 
 ## Destinations And Recommendations
 
-- [x] Destination list supports category filter and sorting.
+- [x] Destination list supports attraction/school category filter and sorting.
 - [ ] Destination detail shows rating, popularity, tags, description, related diaries.
-- [x] Search supports name/category/keyword.
-- [x] Home shows personalized Top 10 recommendations.
+- [x] Search supports attraction/school name/category/keyword.
+- [x] Home shows personalized Top 10 attraction/school recommendations.
 - [x] Recommendation response includes score and reason.
+- [x] Recommendation candidate pool is destination records, not raw campus buildings or facilities.
+- [x] User interests can represent preferred attraction and school categories before recommendation.
 
 ## Map And Routing
 
+- [x] Navigation scope is school/campus internal after a campus destination is selected.
 - [x] Map page displays roads, buildings, and facilities.
 - [x] Map page scaffold uses AMap JS API for rendering.
 - [x] Backend map data and route topology boundary is documented as OSMnx/OpenStreetMap, not AMap routing.

@@ -39,3 +39,10 @@ Run this after `bash scripts/reset_dev_db.sh`.
 - [ ] `bash scripts/check_backend.sh`
 - [ ] `bash scripts/check_frontend.sh`
 - [ ] `bash scripts/check_all.sh`
+
+## Requirement Gap Review
+
+- [ ] Compare current stage against `要求.md`.
+- [ ] Update `docs/course_requirement_gap_analysis.md`.
+- [ ] Update `docs/feature_matrix.md`.
+- [ ] Update `docs/acceptance_checklist.md`.

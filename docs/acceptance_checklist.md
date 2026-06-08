@@ -26,6 +26,8 @@
 - [ ] User can register.
 - [ ] User can log in and receive token.
 - [ ] Profile shows nickname, avatar, interests, favorites.
+- [ ] User can edit interests from the frontend.
+- [ ] User can select preferred destinations/schools before recommendation.
 - [ ] Interest changes affect recommendation output.
 - [ ] Behavior logs are recorded after browsing/rating/favorite actions.
 
@@ -51,12 +53,16 @@
 - [x] Building polygons clear old overlays before filters redraw.
 - [x] Single-route planning returns path steps, distance, time, and mode.
 - [x] Single-route planning uses seeded `map_nodes` / `map_edges` and Dijkstra instead of mock route data.
+- [ ] Route target can be selected by destination/place/facility name, not only typed coordinates.
+- [ ] Shortest-time routing uses per-edge congestion where real speed = congestion * ideal speed.
+- [ ] Route planning filters by transport mode: walking, bicycle, electric cart, and mixed mode.
 - [x] Route scaffold is drawn as polyline on map.
 - [x] Route drawing calls fit-view behavior after rendering.
 - [x] Multi-point planning returns optimized order and closed loop.
 - [x] Nearby facilities are sorted by graph distance, not straight-line distance.
 - [x] Nearby facility query filters by category before route-distance ranking.
 - [x] Nearby facility query returns Top-K results with route paths for AMap drawing.
+- [ ] Nearby facility query supports category-name text input and fuzzy category lookup.
 
 ## Indoor Navigation
 
@@ -67,10 +73,12 @@
 ## Diary Community
 
 - [x] User can publish diary with title, body, and destination.
+- [ ] User can attach image/video media to diary.
 - [x] Diary detail increments views.
 - [x] User can rate/comment on diary.
-- [x] Title exact search works.
-- [x] Body keyword diary search works.
+- [ ] Title exact search uses an indexed exact lookup instead of generic contains matching.
+- [ ] Body keyword diary search uses an inverted index or database full-text search.
+- [ ] Diary recommendation uses views, rating, and personal interest.
 - [x] Compression ratio can be displayed for a diary.
 
 ## Food
@@ -79,12 +87,16 @@
 - [x] Cuisine filter works.
 - [x] Fuzzy search handles close spelling.
 - [x] Food recommendations change with current location.
+- [ ] Food recommendation can be scoped to the selected destination/school.
+- [ ] Food fuzzy search results can be explicitly sorted by heat, rating, and distance.
 
 ## AIGC
 
 - [x] Diary draft endpoint returns title, draft, and reusable prompt.
 - [x] Storyboard endpoint returns scene list, prompt, and simulated video link.
 - [x] Frontend page can call both placeholder endpoints.
+- [ ] AIGC flow accepts uploaded scenic/campus photos as input.
+- [ ] AIGC flow returns a simulated tourism animation/video artifact from photo or diary content.
 
 ## Admin
 
@@ -95,6 +107,7 @@
 ## Docs And Tests
 
 - [x] `docs/feature_matrix.md` is updated for implemented features.
+- [x] `docs/course_requirement_gap_analysis.md` tracks gaps against `要求.md`.
 - [x] Backend tests pass.
 - [x] Frontend typecheck/build passes.
 - [x] `bash scripts/check_all.sh` passes.

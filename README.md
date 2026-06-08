@@ -144,6 +144,7 @@ If the configured `OSM_DEFAULT_PLACE` is not found by Nominatim, the importer fa
 
 - `AGENTS.md`: rules for Codex and future agents.
 - `docs/feature_matrix.md`: feature/API/page/table/test status.
+- `docs/course_requirement_gap_analysis.md`: current gaps against `要求.md`.
 - `docs/acceptance_checklist.md`: acceptance requirements.
 - `docs/amap_map_plan.md`: AMap frontend rendering plan and OSM backend boundary.
 - `docs/stage_1_foundation.md`: project skeleton delivery notes and known gaps.

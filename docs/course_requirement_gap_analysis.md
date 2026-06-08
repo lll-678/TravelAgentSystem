@@ -29,11 +29,12 @@ The main weakness is no longer API absence; it is browser-level verification dep
 | 交通工具策略 | Covered for demo | Route planning filters walking, bicycle, electric-cart, and mixed-mode edges. |
 | 室内导航 | Covered for demo | Indoor nodes/edges, cross-floor Dijkstra, elevator/stair steps, and frontend page are implemented. |
 | 场所查询 | Covered for demo | Category-name lookup, category filtering, graph distance, and Top-K heap are implemented. |
-| 旅游日记管理/交流 | Mostly covered | Publish/list/detail/view/rating/comment/delete and media metadata work. Admin moderation remains. |
-| 日记推荐 | Covered for demo | Views + rating + personal interest Top-K exists. |
-| 日记精确查询/全文检索 | Covered for demo | Exact title index and lightweight inverted index full-text search are implemented. |
-| 日记压缩 | Covered for demo | Uses zlib+base64 lossless compression on publish and decompression on read. If hand-written compression is required, this needs a Huffman replacement. |
-| AIGC 动画 | Covered for demo | Deterministic mock draft/storyboard accepts media URLs and returns a simulated video link. |
+| 旅游日记管理/交流 | Mostly covered | Text diary publish/list/detail/view/rating/comment/delete work, all-user list exists, admin delete exists, and image/video media URL metadata is supported. Browser multipart upload and richer moderation statuses remain optional enhancements. |
+| 日记热度/评分/兴趣推荐 | Covered for demo | Views are heat; list sort supports hot/rating; `GET /api/v1/diaries/recommend` uses views + rating + personal interest with Top-K heap. |
+| 目的地相关日记查询排序 | Covered for demo | `GET /api/v1/diaries?destination_id=...&sort=hot|rating` filters destination-related diaries and sorts by heat/rating. Frontend destination selector can be made more explicit in a polish stage. |
+| 日记精确查询/全文检索 | Covered for demo | Exact title uses `diary_title_indexes`; full-text uses lightweight `diary_search_tokens` inverted index. Chinese segmentation quality can be improved later. |
+| 日记压缩 | Covered for demo | Uses zlib+base64 lossless compression on publish and decompression on read, with compression ratio and `decompress_ok`. If hand-written compression is required, add a Huffman implementation. |
+| AIGC 动画 | Covered for demo | Deterministic mock draft/storyboard accepts scenic/school media URLs and returns storyboard scenes plus a simulated video link. Real external AIGC generation remains future work. |
 | 美食推荐 | Mostly covered | Cuisine filter, destination scope, hot/rating/distance scoring, Top-K heap, route preview, fuzzy query, and explicit search sort controls exist. |
 
 ## Recommended Next Stages

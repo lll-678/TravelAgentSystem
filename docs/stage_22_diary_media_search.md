@@ -10,6 +10,8 @@ This stage closes the diary requirement gaps:
 - interest-aware diary recommendation
 - AIGC storyboard input with media URLs
 
+For the current full requirement mapping against `要求.md`, see `docs/stage_30_diary_requirement_alignment.md`.
+
 ## Delivered
 
 - New tables:
@@ -43,3 +45,4 @@ Expected:
 
 - Media is stored as metadata URL/path, not binary multipart upload.
 - Compression still uses zlib+base64; replacing it with hand-written Huffman remains optional unless strictly required.
+- AIGC storyboard generation is a deterministic simulated artifact, not a real external video model call.

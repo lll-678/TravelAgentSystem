@@ -101,13 +101,25 @@
 ## Diary Community
 
 - [x] User can publish diary with title, body, and destination.
-- [x] User can attach image/video media metadata to diary.
+- [x] User can record travel content with text plus image/video URL metadata.
+- [ ] User can upload local image/video binary files through the browser when this is required for the demo.
+- [x] All users' diaries are browsable in one community list.
+- [x] Admin can list and delete diaries for unified management.
 - [x] Diary detail increments views.
+- [x] Diary views are treated as diary heat.
 - [x] User can rate/comment on diary.
+- [x] Diary list can be sorted by heat.
+- [x] Diary list can be sorted by rating.
+- [x] Diary recommendation uses Top-K ranking over views, rating, and personal interest.
+- [x] Destination-related diaries can be queried with `destination_id`.
+- [x] Destination-related diary results can be sorted by heat/rating.
 - [x] Title exact search uses an indexed exact lookup instead of generic contains matching.
 - [x] Body keyword diary search uses an inverted index or database full-text search.
-- [x] Diary recommendation uses views, rating, and personal interest.
 - [x] Compression ratio can be displayed for a diary.
+- [x] Compression endpoint reports lossless decompression check.
+- [ ] Hand-written Huffman compression exists if the teacher explicitly requires a custom compression algorithm.
+- [x] AIGC flow accepts scenic/school image or video URLs from diary media.
+- [x] AIGC flow returns storyboard scenes and a simulated tourism animation/video link.
 
 ## Food
 

@@ -2,7 +2,9 @@
 
 ## Scope
 
-This stage implements the diary-community part of the project plan's fifth phase. It keeps the required harness offline-friendly and focuses on DB-backed publish, browse, search, recommendation, rating, comments, and compression/decompression verification.
+This stage implements the first diary-community slice of the project plan's fifth phase. It keeps the required harness offline-friendly and focuses on DB-backed publish, browse, search, recommendation, rating, comments, and compression/decompression verification.
+
+For the current course-requirement alignment, also see `docs/stage_22_diary_media_search.md` and `docs/stage_30_diary_requirement_alignment.md`.
 
 ## Delivered
 
@@ -78,12 +80,14 @@ Expected backend result after this stage:
 25 passed
 ```
 
-## Known Gaps
+## Historical Gaps At Stage 8
 
 - Image upload and `diary_media` persistence are not implemented yet.
 - AIGC diary draft/storyboard endpoints remain in a later fifth-phase slice.
 - Full-text search currently uses deterministic title/body contains matching after decompression; a true inverted index can be added in the AIGC/admin slice.
 - Rating accepts repeated ratings from the same user; this is acceptable for demo scoring but should be constrained in production.
+
+Stage 22 later added media metadata, exact title index, inverted index search, and AIGC media input. Remaining limits are tracked in `docs/stage_30_diary_requirement_alignment.md`.
 
 ## Next Stage
 

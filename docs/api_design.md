@@ -31,15 +31,26 @@ Destination recommendation/search is for tourist attractions and schools/campuse
 
 - `POST /diaries`
 - `GET /diaries`
+  - supports `destination_id`, `q`, `sort=hot|rating|latest`, `limit`, and `offset`
 - `GET /diaries/{id}`
 - `PUT /diaries/{id}`
 - `DELETE /diaries/{id}`
 - `POST /diaries/{id}/view`
+  - increments `views`; views are diary heat
 - `POST /diaries/{id}/rating`
 - `POST /diaries/{id}/comments`
+  - supports all-user diary communication
+- `POST /diaries/{id}/media`
+  - accepts image/video URL metadata for scenic/school media
+- `GET /diaries/{id}/media`
 - `GET /diaries/search`
+  - supports `mode=exact_title|fulltext|contains`
+  - `exact_title` uses normalized title index
+  - `fulltext` uses lightweight inverted tokens
 - `GET /diaries/recommend`
+  - ranks by views, rating, and personal interest through Top-K
 - `GET /diaries/{id}/compression`
+  - reports lossless compression stats and decompression check
 
 ## Food
 
@@ -53,10 +64,14 @@ Destination recommendation/search is for tourist attractions and schools/campuse
 
 - `POST /aigc/diary-draft`
 - `POST /aigc/storyboard`
+  - accepts `media_urls` from scenic/school diary media
+  - returns storyboard scenes, reusable prompt, and simulated video link
 
 ## Admin
 
 - `GET /admin/stats`
+- `GET /admin/diaries`
+- `DELETE /admin/diaries/{id}`
 - `GET /admin/map/import/status`
 - `POST /admin/map/import`
   - `source=fixture`: offline fallback payload

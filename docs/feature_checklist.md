@@ -20,6 +20,13 @@ Run this after `bash scripts/reset_dev_db.sh`.
 - [x] `POST /api/v1/admin/map/import` with `source=amap_poi`
 - [x] `GET /api/v1/diaries`
 - [x] `POST /api/v1/diaries`
+- [x] `GET /api/v1/diaries/search`
+- [x] `GET /api/v1/diaries/recommend`
+- [x] `POST /api/v1/diaries/{id}/view`
+- [x] `POST /api/v1/diaries/{id}/rating`
+- [x] `POST /api/v1/diaries/{id}/comments`
+- [x] `POST /api/v1/diaries/{id}/media`
+- [x] `GET /api/v1/diaries/{id}/compression`
 - [x] `GET /api/v1/foods/recommend`
 - [x] `GET /api/v1/foods/nearby`
 - [x] `POST /api/v1/aigc/diary-draft`

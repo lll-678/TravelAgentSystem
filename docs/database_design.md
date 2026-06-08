@@ -17,8 +17,11 @@
 | `indoor_nodes` | indoor route graph nodes |
 | `indoor_edges` | indoor route graph edges |
 | `diaries` | compressed diary records |
+| `diary_media` | image/video URL metadata for diary records |
 | `diary_comments` | comments |
 | `diary_ratings` | ratings |
+| `diary_title_indexes` | normalized exact-title lookup |
+| `diary_search_tokens` | lightweight inverted index tokens for title/body |
 | `restaurants` | food locations |
 | `foods` | food items |
 

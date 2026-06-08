@@ -345,6 +345,7 @@ python backend/scripts/smoke_amap_route.py
 - `docs/stage_35_multi_scene_scenic_navigation.md`: multi-scene navigation and Summer Palace scenic navigation plan.
 - `docs/stage_36_food_recommendation.md`: food Top-K recommendation, fuzzy search, sort modes, and data boundary notes.
 - `docs/stage_37_real_food_poi.md`: real destination-nearby restaurant POI import and Summer Palace food data notes.
+- `docs/stage_38_indoor_navigation_plan.md`: China Science and Technology Museum indoor navigation upgrade plan.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

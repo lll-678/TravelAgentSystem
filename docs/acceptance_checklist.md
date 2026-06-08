@@ -110,6 +110,12 @@
 - [x] User can choose building and floor.
 - [x] Indoor nodes include entrance, elevator/stairs, room, toilet.
 - [x] Indoor route supports cross-floor steps.
+- [ ] Stage 38 building is upgraded to `中国科学技术馆主展厅`.
+- [ ] Stage 38 graph includes B1, 1F, 2F, 3F, 4F, and 5F.
+- [ ] Route from main entrance to elevator hall works.
+- [ ] Route from entrance to a fourth-floor exhibition hall uses elevator and reaches floor 4.
+- [ ] Accessible route mode avoids stairs/escalators and uses elevator.
+- [ ] Indoor route trace reports Dijkstra, route mode, node count, edge count, and vertical traffic choice.
 
 ## Diary Community
 

@@ -16,12 +16,13 @@ Smart Tour Guide is an attraction/school recommendation system plus a campus-int
 2. Search attractions/schools by name, category, or keyword.
 3. Select a school/campus context, then open map guide and view internal roads, buildings, and facilities.
 4. Plan an internal campus route and inspect distance/time/steps.
-5. Query nearby facilities by category and graph distance.
-6. Browse all-user diaries, open details to increase heat, rate/comment after reading, and search by destination/title/body.
-7. Recommend foods by cuisine, rating, heat, and distance.
-8. Generate Agent-style AIGC diary/storyboard output from text and scenic/school media URLs, including a visible tool execution trace.
-9. Check admin data scale and map import status.
-10. Log in as admin to access management tools; normal users should not see or call admin features.
+5. Plan an indoor route across entrance, elevator/stairs, floors, and rooms/exhibition halls.
+6. Query nearby facilities by category and graph distance.
+7. Browse all-user diaries, open details to increase heat, rate/comment after reading, and search by destination/title/body.
+8. Recommend foods by cuisine, rating, heat, and distance.
+9. Generate Agent-style AIGC diary/storyboard output from text and scenic/school media URLs, including a visible tool execution trace.
+10. Check admin data scale and map import status.
+11. Log in as admin to access management tools; normal users should not see or call admin features.
 
 ## Demo Boundary
 

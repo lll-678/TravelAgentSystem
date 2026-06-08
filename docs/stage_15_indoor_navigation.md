@@ -67,3 +67,4 @@ Expected:
 
 - Indoor floor plan is a simple schematic, not CAD/building-image based.
 - There is no indoor/outdoor route stitching yet.
+- Stage 38 plans to upgrade the demo building to `中国科学技术馆主展厅`, using official public venue-guide pages as the source boundary while keeping the floor plan schematic.

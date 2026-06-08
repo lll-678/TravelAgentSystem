@@ -2,7 +2,7 @@
 
 大型校园 / 景区智能导览平台 MVP。
 
-当前仓库处于 **Stage 13 campus data density and AMap drift hardening** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。本阶段进一步增密北京邮电大学沙河校区演示地图，并在前端渲染前完成 WGS84 到 GCJ-02 坐标转换，解决高德底图上的覆盖物漂移问题。
+当前仓库处于 **Stage 18 facility and food query polish** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、室内导航、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、校园地图增密、拥挤度/交通方式路线策略、室内跨楼层导航、用户兴趣编辑和设施/美食查询打磨。
 
 ## Target Stack
 

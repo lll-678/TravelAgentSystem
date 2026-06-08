@@ -17,6 +17,8 @@
   - buildings: 60
   - facility categories: 10
   - facilities: 120
+  - indoor nodes: 19
+  - indoor edges: 20
   - restaurants: 12
   - foods: 72
   - diaries: 20
@@ -37,3 +39,4 @@ bash scripts/check_all.sh
 - Dev seed defaults to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db`.
 - PostgreSQL/PostGIS remains the target deployment database.
 - Real OSMnx import is not implemented in this stage; seeded map data is deterministic mock data shaped like campus map data.
+- `scripts/smoke_features.sh` should not leave persistent user-interest mutations in the dev DB.

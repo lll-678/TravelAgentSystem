@@ -23,6 +23,8 @@ from app.services.recommendation_service import recommend_destinations_from_db
 from app.services.route_service import plan_multi_point_route_from_db, plan_route_from_db
 from app.services.search_service import search_places_from_db
 from app.services.user_service import update_user_interests_from_db
+from app.models import UserInterest
+from sqlalchemy import select
 
 
 def require(label: str, value: int, minimum: int = 1) -> None:
@@ -60,21 +62,28 @@ with Session(engine) as session:
         f"total={recommendations['total']} returned={len(recommendations['items'])}"
     )
 
-    profile = update_user_interests_from_db(session, 1, ["sports", "study"])
-    require("updated user interests", len(profile["interests"]) if profile else 0, 2)
-    interest_recommendations = recommend_destinations_from_db(
-        session=session,
-        user_id=1,
-        strategy="interest",
-        limit=3,
-        current_lng=116.28333,
-        current_lat=40.15608,
-    )
-    require("interest recommendations", len(interest_recommendations["items"]))
-    print(
-        "[smoke] user interests: "
-        f"{interest_recommendations['algorithm_trace']['interest_tags']}"
-    )
+    original_interests = [
+        interest.tag
+        for interest in session.scalars(select(UserInterest).where(UserInterest.user_id == 1)).all()
+    ]
+    try:
+        profile = update_user_interests_from_db(session, 1, ["sports", "study"])
+        require("updated user interests", len(profile["interests"]) if profile else 0, 2)
+        interest_recommendations = recommend_destinations_from_db(
+            session=session,
+            user_id=1,
+            strategy="interest",
+            limit=3,
+            current_lng=116.28333,
+            current_lat=40.15608,
+        )
+        require("interest recommendations", len(interest_recommendations["items"]))
+        print(
+            "[smoke] user interests: "
+            f"{interest_recommendations['algorithm_trace']['interest_tags']}"
+        )
+    finally:
+        update_user_interests_from_db(session, 1, original_interests)
 
     route = plan_route_from_db(
         session,

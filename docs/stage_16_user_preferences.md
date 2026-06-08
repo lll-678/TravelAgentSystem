@@ -20,6 +20,7 @@ It does not implement token authentication yet.
 - Added `UserPreferencePage`.
 - Added a reusable frontend `apiPut` helper.
 - Added smoke coverage for interest update followed by interest recommendation.
+- Smoke restores the original user interests after checking dynamic recommendations.
 - Added backend tests for user profile APIs and recommendation trace changes.
 
 ## Acceptance

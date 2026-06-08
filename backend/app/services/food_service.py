@@ -49,8 +49,17 @@ def list_food_items_from_db(
     }
 
 
-def search_foods_from_db(session: Session, q: str, cuisine: str | None, limit: int) -> dict[str, Any]:
+def search_foods_from_db(
+    session: Session,
+    q: str,
+    cuisine: str | None,
+    limit: int,
+    sort: str = "match",
+    current_lng: float | None = None,
+    current_lat: float | None = None,
+) -> dict[str, Any]:
     keyword = q.casefold().strip()
+    current = _resolve_current(current_lng, current_lat)
     scored = []
     for food in _filter_foods(_load_foods(session), cuisine, None):
         rank = _food_match_rank(food, keyword)
@@ -58,9 +67,10 @@ def search_foods_from_db(session: Session, q: str, cuisine: str | None, limit: i
             continue
         item = serialize_food(food)
         item["match_rank"] = rank
+        item["distance"] = round(approximate_distance_meters(current, (food.restaurant.lng, food.restaurant.lat)))
         scored.append(item)
 
-    results = sorted(scored, key=lambda item: (item["match_rank"], -item["heat"], -item["rating"]))[:limit]
+    results = sorted(scored, key=lambda item: _food_search_sort_key(item, sort))[:limit]
     for item in results:
         item.pop("match_rank", None)
     return {
@@ -68,9 +78,11 @@ def search_foods_from_db(session: Session, q: str, cuisine: str | None, limit: i
         "total": len(scored),
         "keyword": q,
         "cuisine": cuisine,
+        "sort": sort,
         "algorithm_trace": {
             "stage": "stage-9-food-aigc-admin",
             "algorithm": "contains plus lightweight Levenshtein fuzzy search",
+            "sort": sort,
             "matched": str(len(scored)),
             "returned": str(len(results)),
         },
@@ -222,6 +234,16 @@ def _food_match_rank(food: Food, keyword: str) -> int | None:
     if any(_levenshtein(keyword, field[: max(len(keyword), 1)]) <= 2 for field in fields):
         return 3
     return None
+
+
+def _food_search_sort_key(item: dict[str, Any], sort: str) -> tuple[float, ...]:
+    if sort == "hot":
+        return (-float(item["heat"]), -float(item["rating"]), float(item["distance"]), float(item["match_rank"]))
+    if sort == "rating":
+        return (-float(item["rating"]), -float(item["heat"]), float(item["distance"]), float(item["match_rank"]))
+    if sort == "distance":
+        return (float(item["distance"]), float(item["match_rank"]), -float(item["rating"]), -float(item["heat"]))
+    return (float(item["match_rank"]), -float(item["heat"]), -float(item["rating"]), float(item["distance"]))
 
 
 def _score_food(

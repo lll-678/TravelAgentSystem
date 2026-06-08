@@ -34,7 +34,8 @@ def get_nearby_facilities_from_db(
     nodes_by_id = {node.id: node for node in nodes}
     graph = build_bidirectional_graph(edges)
 
-    candidates = _load_facilities(session, category)
+    resolved_category = _resolve_category_code(session, category)
+    candidates = _load_facilities(session, resolved_category)
     enriched = []
     for facility in candidates:
         facility_node = _resolve_facility_node(facility, nodes, nodes_by_id)
@@ -73,11 +74,14 @@ def get_nearby_facilities_from_db(
     return {
         "items": ranked,
         "total": len(enriched),
-        "category": category,
+        "category": resolved_category,
+        "category_query": category,
         "radius": radius,
         "algorithm_trace": {
             "stage": "stage-5-facility-graph-distance",
             "filter": "facility category before routing",
+            "category_lookup": "code/name/contains matching",
+            "resolved_category": resolved_category or "",
             "distance": "Dijkstra graph distance plus snap distance",
             "ranking": "Top-K heap by graph distance",
             "candidates": str(len(candidates)),
@@ -117,6 +121,47 @@ def _load_facilities(session: Session, category: str | None) -> list[Facility]:
     if category:
         query = query.join(FacilityCategory).where(FacilityCategory.code == category)
     return list(session.scalars(query).all())
+
+
+def _resolve_category_code(session: Session, category: str | None) -> str | None:
+    if not category:
+        return None
+    keyword = category.strip().casefold()
+    if not keyword:
+        return None
+    aliases = {
+        "卫生间": "toilet",
+        "厕所": "toilet",
+        "洗手间": "toilet",
+        "水": "water",
+        "饮水": "water",
+        "食堂": "canteen",
+        "餐厅": "canteen",
+        "超市": "shop",
+        "商店": "shop",
+        "便利店": "shop",
+        "校门": "gate",
+        "门": "gate",
+        "图书馆": "library",
+        "运动": "sport",
+        "体育": "sport",
+        "医院": "clinic",
+        "医务": "clinic",
+        "交通": "transport",
+        "车站": "transport",
+        "atm": "atm",
+    }
+    if keyword in aliases:
+        return aliases[keyword]
+    categories = session.scalars(select(FacilityCategory).order_by(FacilityCategory.id)).all()
+    for item in categories:
+        if keyword in {item.code.casefold(), item.name.casefold()}:
+            return item.code
+    for item in categories:
+        haystack = f"{item.code} {item.name}".casefold()
+        if keyword in haystack or haystack in keyword:
+            return item.code
+    return category
 
 
 def _resolve_facility_node(

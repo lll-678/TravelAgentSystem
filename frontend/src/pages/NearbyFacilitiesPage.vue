@@ -13,7 +13,7 @@
         <el-card shadow="never">
           <el-form label-position="top">
             <el-form-item label="设施类别">
-              <el-select v-model="category" clearable placeholder="全部类别">
+              <el-select v-model="category" clearable filterable allow-create placeholder="全部类别">
                 <el-option label="厕所" value="toilet" />
                 <el-option label="饮水点" value="water" />
                 <el-option label="便利店" value="shop" />

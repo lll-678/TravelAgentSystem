@@ -60,3 +60,24 @@ def test_nearby_facilities_api_handler_uses_seeded_database() -> None:
     assert len(payload["items"]) == 5
     assert payload["items"][0]["distance"] <= payload["items"][-1]["distance"]
     assert payload["algorithm_trace"]["distance"] == "Dijkstra graph distance plus snap distance"
+
+
+def test_nearby_facilities_accepts_category_name_query() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
+    create_all(engine)
+
+    with Session(engine) as session:
+        seed_demo_data(session)
+        payload = get_nearby_facilities_from_db(
+            session=session,
+            current_lng=BUPT_SHAHE_CENTER[0],
+            current_lat=BUPT_SHAHE_CENTER[1],
+            category="厕所",
+            radius=5000,
+            limit=3,
+        )
+
+    assert payload["category"] == "toilet"
+    assert payload["algorithm_trace"]["resolved_category"] == "toilet"
+    assert len(payload["items"]) == 3
+    assert all(item["category"] == "toilet" for item in payload["items"])

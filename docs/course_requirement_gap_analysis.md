@@ -22,8 +22,7 @@ The main weakness is not API absence; it is requirement depth. Several features 
 | P1 | Diary media | Text diary works; compression works | No image/video upload, no media preview, AIGC does not accept photos | Add media table/local upload and pass uploaded media metadata to mock AIGC |
 | P1 | Diary search | Title/body contains search works | No exact-title index/hash/trie; full-text is not an inverted index or DB full-text search | Add exact title lookup and lightweight inverted index or SQLite/Postgres FTS path |
 | P1 | Diary recommendation | Uses views + rating Top-K | Does not use personal interest | Add user-interest overlap to diary score and expose reason |
-| P1 | Facility query | Category code filter and graph-distance Top-K work | No category-name text lookup/fuzzy input flow | Add category-name search and UI text input |
-| P1 | Food search/recommend | Cuisine filter, fuzzy search, Top-K scoring work | Food is not explicitly scoped to selected destination; fuzzy search does not expose sorting by distance | Add destination/current-place context and sort controls |
+| P1 | Food destination scope | Cuisine filter, fuzzy search, heat/rating/distance sort, and Top-K scoring work | Food is not explicitly scoped to selected destination/school | Add destination/current-place context and destination linkage |
 | P1 | Map demo verification | AMap component exists and converts WGS84 to GCJ-02 | No browser/e2e screenshot proof because AMap key is environment-dependent | Add optional Playwright smoke guarded by `VITE_AMAP_KEY` |
 | P2 | Real map data richness | Dense deterministic BUPT seed; OSM import path exists | OSM POI/building data may still be sparse for campus | Optional AMap POI enrichment import into local DB |
 
@@ -38,24 +37,24 @@ The main weakness is not API absence; it is requirement depth. Several features 
 | 最短时间/拥挤度 | Covered for demo | `shortest_time` uses duration computed from per-edge congestion and ideal speed. |
 | 交通工具策略 | Covered for demo | Route planning filters walking, bicycle, electric-cart, and mixed-mode edges. |
 | 室内导航 | Covered for demo | Indoor nodes/edges, cross-floor Dijkstra, elevator/stair steps, and frontend page are implemented. |
-| 场所查询 | Mostly covered | Category filtering, graph distance, and Top-K heap are implemented. Category-name text lookup remains. |
+| 场所查询 | Covered for demo | Category-name lookup, category filtering, graph distance, and Top-K heap are implemented. |
 | 旅游日记管理/交流 | Partial | Publish/list/detail/view/rating/comment/delete work. Media upload and admin moderation are missing. |
 | 日记推荐 | Partial | Views + rating Top-K exists. Personal interest is not included. |
 | 日记精确查询/全文检索 | Partial | Contains search works, but exact-title index and inverted/full-text search are not yet implemented. |
 | 日记压缩 | Covered for demo | Uses zlib+base64 lossless compression on publish and decompression on read. If hand-written compression is required, this needs a Huffman replacement. |
 | AIGC 动画 | Partial | Deterministic mock draft/storyboard exists. Photo upload and photo-to-animation input flow are missing. |
-| 美食推荐 | Partial | Cuisine filter, hot/rating/distance scoring, Top-K heap, route preview, and fuzzy query exist. Destination-scoped filtering and explicit sort controls remain. |
+| 美食推荐 | Partial | Cuisine filter, hot/rating/distance scoring, Top-K heap, route preview, fuzzy query, and explicit search sort controls exist. Destination-scoped filtering remains. |
 
 ## Recommended Next Stages
 
 1. Stage 17: diary search and media.
    Add media upload, exact title lookup, inverted/full-text search, and interest-aware diary recommendations.
 
-2. Stage 18: query polish for facilities and food.
-   Add category-name lookup, destination-scoped food filtering, and visible sort controls for heat/rating/distance.
-
-3. Stage 19: auth and behavior feedback.
+2. Stage 19: auth and behavior feedback.
    Add registration/login, favorites, destination ratings, and browsing behavior logs.
+
+3. Stage 20: destination-scoped food.
+   Link restaurants/foods to destinations or map regions and filter food recommendations by selected destination/school.
 
 ## Harness Commands
 

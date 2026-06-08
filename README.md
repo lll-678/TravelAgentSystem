@@ -163,6 +163,7 @@ If the configured `OSM_DEFAULT_PLACE` is not found by Nominatim, the importer fa
 - `docs/stage_14_route_strategies.md`: congestion and transport-mode route strategy notes.
 - `docs/stage_15_indoor_navigation.md`: indoor graph and cross-floor route notes.
 - `docs/stage_16_user_preferences.md`: editable interests and recommendation refresh notes.
+- `docs/stage_18_query_polish.md`: facility category lookup and food search sorting notes.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

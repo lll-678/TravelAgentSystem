@@ -63,7 +63,7 @@
 - [x] Nearby facilities are sorted by graph distance, not straight-line distance.
 - [x] Nearby facility query filters by category before route-distance ranking.
 - [x] Nearby facility query returns Top-K results with route paths for AMap drawing.
-- [ ] Nearby facility query supports category-name text input and fuzzy category lookup.
+- [x] Nearby facility query supports category-name text input and fuzzy category lookup.
 
 ## Indoor Navigation
 
@@ -89,7 +89,7 @@
 - [x] Fuzzy search handles close spelling.
 - [x] Food recommendations change with current location.
 - [ ] Food recommendation can be scoped to the selected destination/school.
-- [ ] Food fuzzy search results can be explicitly sorted by heat, rating, and distance.
+- [x] Food fuzzy search results can be explicitly sorted by heat, rating, and distance.
 
 ## AIGC
 

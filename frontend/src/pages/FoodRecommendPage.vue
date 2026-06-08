@@ -20,6 +20,9 @@
                 <el-option v-for="item in cuisineOptions" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
+            <el-form-item label="搜索排序">
+              <el-segmented v-model="sort" :options="sortOptions" />
+            </el-form-item>
             <el-form-item label="搜索半径">
               <el-input-number v-model="radius" :min="100" :max="5000" :step="100" />
             </el-form-item>
@@ -44,6 +47,9 @@
             <el-table-column prop="restaurant_name" label="餐厅" min-width="128" />
             <el-table-column prop="cuisine" label="菜系" width="96" />
             <el-table-column prop="rating" label="评分" width="76" />
+            <el-table-column prop="distance" label="距离" width="88">
+              <template #default="{ row }">{{ row.distance ? `${row.distance}m` : "-" }}</template>
+            </el-table-column>
             <el-table-column prop="price" label="价格" width="76">
               <template #default="{ row }">¥{{ row.price }}</template>
             </el-table-column>
@@ -82,6 +88,7 @@ import {
 const loading = ref(false);
 const keyword = ref("");
 const cuisine = ref("");
+const sort = ref("match");
 const radius = ref(1200);
 const restaurants = ref<RestaurantItem[]>([]);
 const foods = ref<FoodItem[]>([]);
@@ -89,6 +96,12 @@ const cuisines = ref<string[]>([]);
 const routePath = ref<Coordinate[]>([]);
 
 const cuisineOptions = computed(() => cuisines.value.length > 0 ? cuisines.value : ["home-style", "noodle", "cafe", "halal", "snack"]);
+const sortOptions = [
+  { label: "匹配", value: "match" },
+  { label: "热度", value: "hot" },
+  { label: "评分", value: "rating" },
+  { label: "距离", value: "distance" },
+];
 const foodMarkers = computed<FacilityItem[]>(() =>
   foods.value.map((food) => ({
     id: `food-${food.id}`,
@@ -137,6 +150,7 @@ async function searchFoods() {
   try {
     const params = buildBaseParams();
     params.set("q", keyword.value.trim());
+    params.set("sort", sort.value);
     params.set("limit", "20");
     const payload = await apiGet<FoodListPayload>(`/api/v1/foods/search?${params}`);
     foods.value = payload.items;

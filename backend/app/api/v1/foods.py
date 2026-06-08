@@ -43,10 +43,21 @@ def list_food_items(
 def search_foods(
     q: str = Query(min_length=1),
     cuisine: str | None = Query(default=None),
+    sort: str = Query(default="match"),
+    current_lng: float | None = Query(default=None),
+    current_lat: float | None = Query(default=None),
     limit: int = Query(default=10, ge=1, le=50),
     db: Session = Depends(get_db),
 ) -> dict:
-    return search_foods_from_db(db, q=q, cuisine=cuisine, limit=limit)
+    return search_foods_from_db(
+        db,
+        q=q,
+        cuisine=cuisine,
+        sort=sort,
+        current_lng=current_lng,
+        current_lat=current_lat,
+        limit=limit,
+    )
 
 
 @router.get("/recommend")

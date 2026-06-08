@@ -16,6 +16,7 @@ from app.services.destination_service import list_destinations_from_db
 from app.services.diary_service import list_diaries_from_db
 from app.services.facility_service import get_nearby_facilities_from_db
 from app.services.food_service import nearby_foods_from_db, recommend_foods_from_db
+from app.services.food_service import search_foods_from_db
 from app.services.indoor_service import plan_indoor_route_from_db
 from app.services.map_data_service import get_map_stats_from_db
 from app.services.recommendation_service import recommend_destinations_from_db
@@ -130,12 +131,15 @@ with Session(engine) as session:
         session=session,
         current_lng=116.28333,
         current_lat=40.15608,
-        category=None,
+        category="厕所",
         radius=5000,
         limit=3,
     )
     require("nearby facilities", len(facilities["items"]))
-    print(f"[smoke] facilities: total={facilities['total']} returned={len(facilities['items'])}")
+    print(
+        "[smoke] facilities: "
+        f"category={facilities['category']} total={facilities['total']} returned={len(facilities['items'])}"
+    )
 
     diaries = list_diaries_from_db(session, destination_id=None, q=None, sort="hot", limit=2, offset=0)
     require("diaries", diaries["total"])
@@ -151,6 +155,21 @@ with Session(engine) as session:
     )
     require("food recommendations", len(foods["items"]))
     print(f"[smoke] foods: total={foods['total']} returned={len(foods['items'])}")
+
+    food_search = search_foods_from_db(
+        session=session,
+        q="饭",
+        cuisine=None,
+        sort="distance",
+        current_lng=116.28333,
+        current_lat=40.15608,
+        limit=3,
+    )
+    require("food distance search", len(food_search["items"]))
+    print(
+        "[smoke] food search: "
+        f"sort={food_search['sort']} returned={len(food_search['items'])}"
+    )
 
     nearby_foods = nearby_foods_from_db(
         session=session,

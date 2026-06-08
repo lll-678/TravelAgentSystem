@@ -5,6 +5,7 @@ import httpx
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.campus_scope import is_in_bupt_shahe_bounds
 from app.algorithms.coordinates import gcj02_to_wgs84, wgs84_to_gcj02
 from app.algorithms.route_planning import approximate_distance_meters
 from app.models import Facility, FacilityCategory, MapNode
@@ -107,6 +108,9 @@ def import_amap_pois_to_db(
     keywords: list[str] | None = None,
     max_pages: int = 3,
     reset_facilities: bool = False,
+    reset_dataset: bool = False,
+    dataset: str = "nearby_facilities",
+    campus_only: bool = False,
     request_interval: float = 0.3,
 ) -> dict[str, Any]:
     pois, fetch_trace = fetch_amap_pois(
@@ -125,6 +129,9 @@ def import_amap_pois_to_db(
         center_lat=center_lat,
         radius=radius,
         reset_facilities=reset_facilities,
+        reset_dataset=reset_dataset,
+        dataset=dataset,
+        campus_only=campus_only,
         fetch_trace=fetch_trace,
     )
 
@@ -136,21 +143,28 @@ def import_amap_poi_items_to_db(
     center_lat: float = BUPT_SHAHE_CENTER[1],
     radius: int = 1500,
     reset_facilities: bool = False,
+    reset_dataset: bool = False,
+    dataset: str = "nearby_facilities",
+    campus_only: bool = False,
     fetch_trace: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if reset_facilities:
         session.execute(delete(Facility))
         session.execute(delete(FacilityCategory))
         session.flush()
+    elif reset_dataset and dataset != "campus_navigation":
+        session.execute(delete(Facility).where(Facility.description.like(f"%dataset={dataset}%")))
+        session.flush()
 
     categories = _load_or_create_standard_categories(session)
     nodes = list(session.scalars(select(MapNode).order_by(MapNode.id)).all())
-    existing_signatures = {
-        _facility_signature(facility.name, facility.lng, facility.lat)
+    existing_by_signature = {
+        _facility_signature(facility.name, facility.lng, facility.lat): facility
         for facility in session.scalars(select(Facility)).all()
     }
     seen_amap_ids: set[str] = set()
     imported = 0
+    tagged = 0
     skipped = 0
 
     for poi in pois:
@@ -170,42 +184,52 @@ def import_amap_poi_items_to_db(
         if distance > radius + 100:
             skipped += 1
             continue
+        if campus_only and not is_in_bupt_shahe_bounds(normalized["lng"], normalized["lat"]):
+            skipped += 1
+            continue
 
         signature = _facility_signature(normalized["name"], normalized["lng"], normalized["lat"])
-        if signature in existing_signatures:
+        existing_facility = existing_by_signature.get(signature)
+        if existing_facility is not None:
+            if _append_dataset_tag(existing_facility, dataset):
+                tagged += 1
             skipped += 1
             continue
 
         category_code = classify_amap_poi(normalized)
         category = categories[category_code]
         nearest_node = _nearest_node(normalized["lng"], normalized["lat"], nodes)
-        session.add(
-            Facility(
-                name=normalized["name"],
-                category_id=category.id,
-                nearest_node_id=nearest_node.id if nearest_node else None,
-                lng=normalized["lng"],
-                lat=normalized["lat"],
-                description=_build_description(normalized),
-            )
+        facility = Facility(
+            name=normalized["name"],
+            category_id=category.id,
+            nearest_node_id=nearest_node.id if nearest_node else None,
+            lng=normalized["lng"],
+            lat=normalized["lat"],
+            description=_build_description(normalized, dataset=dataset),
         )
-        existing_signatures.add(signature)
+        session.add(facility)
+        existing_by_signature[signature] = facility
         imported += 1
 
     session.commit()
     return {
         "source": "amap-place-around",
+        "dataset": dataset,
         "center": [center_lng, center_lat],
         "radius": radius,
+        "campus_only": campus_only,
         "raw_pois": len(pois),
         "facilities_imported": imported,
+        "facilities_tagged": tagged,
         "facilities_skipped": skipped,
         "reset_facilities": reset_facilities,
+        "reset_dataset": reset_dataset,
         "algorithm_trace": {
             "stage": "stage-19-real-data-enrichment",
-            "pipeline": "AMap Place Around POI -> GCJ-02 to WGS84 -> category classify -> nearest graph node -> facilities",
+            "pipeline": "AMap Place Around POI -> GCJ-02 to WGS84 -> optional campus boundary filter -> category classify -> nearest graph node -> facilities",
             "routing_topology": "unchanged; OSM/seed map_nodes and map_edges remain the route graph",
             "dedup": "AMap id plus normalized name and rounded coordinate",
+            "dataset": dataset,
             "fetch": fetch_trace or {},
         },
     }
@@ -301,16 +325,26 @@ def _stringify_address(value: Any) -> str:
     return str(value or "")
 
 
-def _build_description(poi: dict[str, Any]) -> str:
+def _build_description(poi: dict[str, Any], dataset: str) -> str:
     parts = [
         "Imported from AMap Web Service.",
         f"source=amap",
+        f"dataset={dataset}",
         f"amap_id={poi['amap_id']}",
         f"type={poi['type']}",
         f"typecode={poi['typecode']}",
         f"address={poi['address']}",
     ]
     return "; ".join(part for part in parts if part and not part.endswith("="))
+
+
+def _append_dataset_tag(facility: Facility, dataset: str) -> bool:
+    token = f"dataset={dataset}"
+    description = facility.description or ""
+    if token in description:
+        return False
+    facility.description = f"{description}; {token}" if description else token
+    return True
 
 
 def _load_or_create_standard_categories(session: Session) -> dict[str, FacilityCategory]:

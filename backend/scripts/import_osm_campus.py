@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -38,16 +39,22 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Import only OSM walking road graph, keep existing seed fallback graph and POI/building layers.",
     )
+    parser.add_argument("--save-payload", type=Path, default=None, help="Write fetched OSMnx payload to JSON before import.")
+    parser.add_argument("--load-payload", type=Path, default=None, help="Read an OSMnx payload JSON saved by --save-payload instead of fetching.")
+    parser.add_argument("--download-only", action="store_true", help="Fetch and optionally save OSMnx payload without writing the database.")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    engine = create_app_engine(args.database_url)
-    create_all(engine)
-    with Session(engine) as session:
-        if args.source == "fixture":
+    if args.source == "fixture":
+        engine = create_app_engine(args.database_url)
+        create_all(engine)
+        with Session(engine) as session:
             summary = import_fixture_osm_payload(session, reset_existing=not args.keep_existing)
+    else:
+        if args.load_payload:
+            payload = json.loads(args.load_payload.read_text(encoding="utf-8"))
         else:
             payload = build_osmnx_payload(
                 place_name=args.place_name,
@@ -55,23 +62,44 @@ def main() -> None:
                 center_lat=args.center_lat,
                 dist=args.dist,
             )
-            if args.features_only:
-                summary = import_osm_feature_layers_to_db(
-                    session,
-                    payload,
-                    remove_demo_layers=True,
-                    replace_osm_layers=not args.keep_existing,
-                    import_facilities=True,
-                )
-            elif args.graph_only:
-                summary = import_osm_road_graph_to_db(
-                    session,
-                    payload,
-                    replace_osm_roads=not args.keep_existing,
-                    rebind_facilities=True,
-                )
-            else:
-                summary = import_osm_payload_to_db(session, payload, reset_existing=not args.keep_existing)
+        if args.save_payload:
+            args.save_payload.parent.mkdir(parents=True, exist_ok=True)
+            args.save_payload.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        if args.download_only:
+            summary = {
+                "source": payload.get("source", "osmnx-overpass"),
+                "place_name": payload.get("place_name"),
+                "lookup_mode": payload.get("lookup_mode"),
+                "nodes": len(payload.get("nodes", [])),
+                "edges": len(payload.get("edges", [])),
+                "buildings": len(payload.get("buildings", [])),
+                "facilities": len(payload.get("facilities", [])),
+                "download_only": True,
+            }
+        else:
+            engine = create_app_engine(args.database_url)
+            create_all(engine)
+            with Session(engine) as session:
+                if args.features_only:
+                    summary = import_osm_feature_layers_to_db(
+                        session,
+                        payload,
+                        remove_demo_layers=True,
+                        replace_osm_layers=not args.keep_existing,
+                        import_facilities=True,
+                    )
+                elif args.graph_only:
+                    summary = import_osm_road_graph_to_db(
+                        session,
+                        payload,
+                        replace_osm_roads=not args.keep_existing,
+                        rebind_facilities=True,
+                    )
+                else:
+                    summary = import_osm_payload_to_db(session, payload, reset_existing=not args.keep_existing)
 
     print("[osm-import] database:", args.database_url)
     for key, value in summary.items():

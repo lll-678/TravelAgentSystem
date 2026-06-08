@@ -77,6 +77,100 @@ def test_import_amap_poi_items_converts_coordinates_and_deduplicates() -> None:
     assert any(category.code == "service" for category in categories)
 
 
+def test_import_amap_poi_items_can_filter_campus_navigation_dataset() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
+    create_all(engine)
+
+    center_lng, center_lat = 116.28333, 40.15608
+    inside_gcj_lng, inside_gcj_lat = wgs84_to_gcj02(116.28380, 40.15620)
+    outside_gcj_lng, outside_gcj_lat = wgs84_to_gcj02(116.31000, 40.17000)
+    pois = [
+        {
+            "id": "B0CAMPUS001",
+            "name": "校内咖啡",
+            "type": "餐饮服务;咖啡厅;咖啡厅",
+            "location": f"{inside_gcj_lng},{inside_gcj_lat}",
+            "_query_keyword": "咖啡",
+        },
+        {
+            "id": "B0OUTSIDE001",
+            "name": "校外咖啡",
+            "type": "餐饮服务;咖啡厅;咖啡厅",
+            "location": f"{outside_gcj_lng},{outside_gcj_lat}",
+            "_query_keyword": "咖啡",
+        },
+    ]
+
+    with Session(engine) as session:
+        session.add(MapNode(external_id="node-1", name="center", lng=center_lng, lat=center_lat))
+        session.flush()
+        summary = import_amap_poi_items_to_db(
+            session=session,
+            pois=pois,
+            center_lng=center_lng,
+            center_lat=center_lat,
+            radius=5000,
+            dataset="campus_navigation",
+            campus_only=True,
+            reset_dataset=True,
+        )
+        facilities = session.scalars(select(Facility)).all()
+
+    assert summary["dataset"] == "campus_navigation"
+    assert summary["campus_only"] is True
+    assert summary["facilities_imported"] == 1
+    assert len(facilities) == 1
+    assert facilities[0].name == "校内咖啡"
+    assert "dataset=campus_navigation" in (facilities[0].description or "")
+
+
+def test_import_amap_poi_items_tags_existing_nearby_poi_for_campus_navigation() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
+    create_all(engine)
+
+    center_lng, center_lat = 116.28333, 40.15608
+    poi_gcj_lng, poi_gcj_lat = wgs84_to_gcj02(116.28380, 40.15620)
+    pois = [
+        {
+            "id": "B0SHARED001",
+            "name": "共享校内超市",
+            "type": "购物服务;超市;超市",
+            "location": f"{poi_gcj_lng},{poi_gcj_lat}",
+            "_query_keyword": "超市",
+        },
+    ]
+
+    with Session(engine) as session:
+        session.add(MapNode(external_id="node-1", name="center", lng=center_lng, lat=center_lat))
+        session.flush()
+        import_amap_poi_items_to_db(
+            session=session,
+            pois=pois,
+            center_lng=center_lng,
+            center_lat=center_lat,
+            radius=500,
+            dataset="nearby_facilities",
+            reset_facilities=True,
+        )
+        campus_summary = import_amap_poi_items_to_db(
+            session=session,
+            pois=pois,
+            center_lng=center_lng,
+            center_lat=center_lat,
+            radius=500,
+            dataset="campus_navigation",
+            campus_only=True,
+            reset_dataset=True,
+        )
+        facilities = session.scalars(select(Facility)).all()
+
+    assert campus_summary["facilities_imported"] == 0
+    assert campus_summary["facilities_tagged"] == 1
+    assert len(facilities) == 1
+    assert "dataset=nearby_facilities" in (facilities[0].description or "")
+    assert "dataset=campus_navigation" in (facilities[0].description or "")
+
+
 def test_fetch_amap_pois_uses_place_around_without_exposing_key(monkeypatch) -> None:
     calls = []
 

@@ -8,6 +8,11 @@ Manually supplied campus reference files belong under `data/reference/bupt-shahe
 
 Facility density can be enriched from AMap Web Service Place Around POIs. This is a POI import path only; it does not replace backend route topology.
 
+POIs are split by role:
+
+- `nearby_facilities`: school-surrounding POIs for nearby facility recommendation.
+- `campus_navigation`: BUPT Shahe internal POIs filtered by campus boundary for route endpoint/search support.
+
 ## Stored Layers
 
 - Roads: `map_nodes`, `map_edges`.
@@ -33,7 +38,8 @@ Old overlays are cleared before redraw to avoid duplicate markers and stale rout
 - Fixture import: offline and test-safe.
 - OSMnx import: manual/network-enabled path.
 - Reference campus import: offline path from `data/reference/bupt-shahe/raw_wgs84/` and `data/reference/bupt-shahe/topology/`, implemented by `backend/scripts/import_reference_campus.py`.
-- AMap POI import: manual/network-enabled facility enrichment path using `AMAP_WEB_API_KEY`.
+- AMap POI import: manual/network-enabled facility enrichment path using `AMAP_WEB_API_KEY`, with `--dataset nearby_facilities|campus_navigation`.
+- Download-only source capture: `import_osm_campus.py --download-only --save-payload ...` and `import_amap_pois.py --download-only --save-raw ...`.
 - If Nominatim place lookup fails, importer falls back to configured center point and radius.
 
 Raw reference files must be validated and imported into the database before API handlers use them.

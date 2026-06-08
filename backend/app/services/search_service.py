@@ -3,14 +3,8 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.campus_scope import is_in_bupt_shahe_bounds
 from app.models import Building, Destination, Facility, MapNode
-
-BUPT_SHAHE_CAMPUS_BOUNDS = {
-    "min_lng": 116.2770,
-    "max_lng": 116.2896,
-    "min_lat": 40.1534,
-    "max_lat": 40.1602,
-}
 
 
 def search_places_from_db(
@@ -95,7 +89,7 @@ def _search_buildings(
         if category and building.category != category:
             continue
         center = _building_center(building.polygon)
-        if campus_only and not _is_in_bupt_shahe_bounds(center[0], center[1]):
+        if campus_only and not is_in_bupt_shahe_bounds(center[0], center[1]):
             continue
         text = " ".join([building.name, building.category, building.description or ""]).casefold()
         if keyword not in text:
@@ -127,7 +121,7 @@ def _search_facilities(
     for facility in facilities:
         if category and facility.category.code != category:
             continue
-        if campus_only and not _is_in_bupt_shahe_bounds(facility.lng, facility.lat):
+        if campus_only and not is_in_bupt_shahe_bounds(facility.lng, facility.lat):
             continue
         text = " ".join(
             [
@@ -171,7 +165,7 @@ def _search_map_nodes(
             continue
         if not _is_user_selectable_topology_node(node):
             continue
-        if campus_only and not _is_in_bupt_shahe_bounds(node.lng, node.lat):
+        if campus_only and not is_in_bupt_shahe_bounds(node.lng, node.lat):
             continue
         text = " ".join([node.name, node.external_id, "campus_node", "route_node"]).casefold()
         if keyword and keyword not in text:
@@ -237,13 +231,6 @@ def _building_center(polygon: list[list[float]]) -> tuple[float, float]:
     return (
         sum(point[0] for point in polygon) / len(polygon),
         sum(point[1] for point in polygon) / len(polygon),
-    )
-
-
-def _is_in_bupt_shahe_bounds(lng: float, lat: float) -> bool:
-    return (
-        BUPT_SHAHE_CAMPUS_BOUNDS["min_lng"] <= lng <= BUPT_SHAHE_CAMPUS_BOUNDS["max_lng"]
-        and BUPT_SHAHE_CAMPUS_BOUNDS["min_lat"] <= lat <= BUPT_SHAHE_CAMPUS_BOUNDS["max_lat"]
     )
 
 

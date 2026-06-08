@@ -28,6 +28,7 @@ media/              local uploaded media, gitignored except placeholders
 scripts/            project-level bash helpers
 tests/fixtures/     small shared fixtures for backend/frontend tests
 data/reference/     committed reference source data for real campus navigation imports
+data/external/      downloaded third-party OSM/AMap source payloads before cleaning/import
 ```
 
 ## Do Not
@@ -52,6 +53,7 @@ data/reference/     committed reference source data for real campus navigation i
 - Campus buildings/facilities/user-facing named topology nodes are route and map entities, not tourism recommendation candidates unless also modeled in `destinations`.
 - Navigation features are BUPT Shahe campus-internal for the current demo.
 - RoutePlannerPage endpoint autocomplete must use `GET /api/v1/search/places?scope=campus`, may expose `building-{id}`, `facility-{id}`, and semantic `node-{id}` endpoints, and must not expose `destination-{id}` or generic road/intersection nodes as route endpoints.
+- Maintain two POI datasets: `nearby_facilities` for school-surrounding facility recommendation, and `campus_navigation` for BUPT Shahe internal navigation POIs.
 - Backend stores and plans routes using OSM/PostGIS data.
 - Manually supplied campus source files live under `data/reference/bupt-shahe/`.
 - `data/reference/bupt-shahe/raw_wgs84/` stores original WGS84 JSON/GeoJSON source layers.
@@ -59,6 +61,7 @@ data/reference/     committed reference source data for real campus navigation i
 - `data/reference/bupt-shahe/processed/` stores cleaned intermediate outputs, not API runtime state.
 - Frontend renders maps with AMap JS API.
 - Optional backend POI enrichment imports AMap GCJ-02 POIs, converts them to WGS84, and stores them as local facilities.
+- AMap raw GCJ-02 payloads belong under `data/external/bupt-shahe/amap_gcj02/`, not `data/reference/bupt-shahe/raw_wgs84/`.
 - API coordinates are WGS84 longitude/latitude.
 - AMap overlays must receive `[lng, lat]`.
 - Default map center: `[116.28333, 40.15608]` for 北京邮电大学沙河校区.

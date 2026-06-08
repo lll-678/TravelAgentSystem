@@ -2,7 +2,7 @@
 
 景点/学校推荐 + 校园内部导航平台 MVP。
 
-当前仓库处于 **Stage 28 reference campus navigation** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层，以及北邮沙河参考校园拓扑导入：本地导入可产生 106 个参考节点、246 条校内拓扑边和 35 个参考校园设施，旧 seed 方框默认隐藏。
+当前仓库处于 **Stage 29 dual POI source datasets** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层、北邮沙河参考校园拓扑导入，以及双 POI 数据集：`nearby_facilities` 面向学校周边设施推荐，`campus_navigation` 面向校内导航端点和校园边界过滤。
 
 Scope clarification:
 
@@ -32,6 +32,7 @@ media/            local uploaded files
 scripts/          bash check/seed/reset scripts
 tests/fixtures/   deterministic small test fixtures
 data/reference/   committed reference source data for campus navigation imports
+data/external/    downloaded OSM/AMap source payloads before cleaning/import
 ```
 
 ## Environment
@@ -138,6 +139,21 @@ Use `--reset-facilities` when you want AMap POIs to replace seeded facility poin
 
 ```bash
 PYTHONPATH=backend python backend/scripts/import_amap_pois.py --radius 3000 --max-pages 3 --request-interval 0.8 --reset-facilities
+```
+
+Two POI datasets are supported:
+
+```bash
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --dataset nearby_facilities --radius 3000 --max-pages 3 --request-interval 0.8 --reset-facilities
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --dataset campus_navigation --radius 1500 --max-pages 3 --request-interval 0.8 --campus-only --reset-dataset
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --dataset campus_navigation --radius 1500 --campus-only --reset-dataset --load-raw data/external/bupt-shahe/amap_gcj02/campus_navigation_raw.json
+```
+
+To capture external source payloads without changing the database:
+
+```bash
+PYTHONPATH=backend python backend/scripts/import_osm_campus.py --source osmnx --dist 900 --download-only --save-payload data/external/bupt-shahe/osm/osmnx_campus_payload.json
+PYTHONPATH=backend python backend/scripts/import_amap_pois.py --dataset campus_navigation --campus-only --download-only --save-raw data/external/bupt-shahe/amap_gcj02/campus_navigation_raw.json
 ```
 
 To remove old offline square building/facility layers:
@@ -294,6 +310,7 @@ python backend/scripts/smoke_amap_route.py
 - `docs/stage_27_real_map_layers.md`: real-priority OSM + AMap POI map layer cleanup and import notes.
 - `docs/campus_navigation_data_plan.md`: reference campus data placement, validation, and import plan.
 - `docs/stage_28_reference_campus_navigation.md`: supplied BUPT reference topology import and verification notes.
+- `docs/stage_29_dual_poi_sources.md`: separate nearby-facility and campus-navigation POI source workflows.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

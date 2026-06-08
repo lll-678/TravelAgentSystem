@@ -17,6 +17,12 @@
 - [x] AMap Web Service POI import path exists for real facility enrichment.
 - [x] AMap POI import converts GCJ-02 coordinates to backend WGS84 before storage.
 - [x] AMap POI import de-duplicates repeated keyword hits.
+- [x] AMap POI import can tag `nearby_facilities` and `campus_navigation` datasets separately.
+- [x] AMap campus-navigation POI import supports `--campus-only` boundary filtering.
+- [x] OSMnx and AMap download-only source payload commands save files under `data/external/bupt-shahe/`.
+- [x] AMap campus-navigation source download produced 319 raw POIs, with 13 inside the BUPT Shahe campus boundary after conversion/filtering.
+- [x] AMap campus-navigation import from saved raw file tagged 11 existing facility rows without duplicating shared nearby POIs.
+- [x] OSMnx campus source download produced 162 nodes, 456 edges, 56 buildings, and 24 facilities with point-fallback lookup.
 - [x] AMap POI live import has been run with a real key and produced 516 clean BUPT Shahe surrounding facility rows after replacing offline facility seed rows.
 - [x] OSMnx live import has been run for BUPT Shahe fallback point and produced 681 OSM nodes, 2045 OSM road edges, 188 building polygons, and 49 OSM POIs.
 - [x] Old offline square building polygons are removed from the local dev DB and hidden by default from public map APIs.

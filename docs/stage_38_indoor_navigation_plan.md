@@ -4,7 +4,7 @@
 
 Use `中国科学技术馆主展厅` as the upgraded indoor-navigation building.
 
-This replaces the next-stage plan of continuing with only the generic `综合教学楼` seed. The existing `综合教学楼` graph remains a runnable fallback until the new graph is implemented.
+This replaces the next-stage plan of continuing with only the generic `综合教学楼` seed. The existing `综合教学楼` graph remains a runnable fallback.
 
 ## Why This Building
 
@@ -62,11 +62,11 @@ Node groups:
   - `5F 短期展厅`
   - `B1 报告厅/观众餐厅`
 
-Expected graph scale:
+Implemented graph scale:
 
 ```text
-indoor_nodes: 45-70
-indoor_edges: 70-110
+indoor_nodes: 57 for 中国科学技术馆主展厅, 76 total with fallback
+indoor_edges: 74 for 中国科学技术馆主展厅, 94 total with fallback
 ```
 
 ## Required Routes
@@ -123,11 +123,21 @@ The floor plan should be presented as a schematic graph, not as a copied officia
 
 ## Acceptance
 
-- [ ] `中国科学技术馆主展厅` appears in indoor building list.
-- [ ] Indoor node count is at least 45 and edge count is at least 70 for this building.
-- [ ] Route from entrance to elevator hall works.
-- [ ] Route from entrance to `4F 挑战与未来 C 厅` uses elevator and reaches floor 4.
-- [ ] Same-floor route to toilet/store works.
-- [ ] Accessible mode avoids stairs/escalators.
-- [ ] Algorithm trace reports Dijkstra, node count, edge count, route mode, and vertical traffic choice.
-- [ ] Existing `综合教学楼` tests remain passing until it is retired.
+- [x] `中国科学技术馆主展厅` appears in indoor building list.
+- [x] Indoor node count is at least 45 and edge count is at least 70 for this building.
+- [x] Route from entrance to elevator hall works.
+- [x] Route from entrance to `4F 挑战与未来 C 厅` uses elevator and reaches floor 4.
+- [x] Same-floor route to toilet/store works.
+- [x] Accessible mode avoids stairs/escalators.
+- [x] Algorithm trace reports Dijkstra, node count, edge count, route mode, and vertical traffic choice.
+- [x] Existing `综合教学楼` tests remain passing until it is retired.
+
+## Verification
+
+```bash
+PYTHONPATH=backend python -m pytest backend/tests/test_stage15_indoor_navigation.py
+npm run typecheck
+npm run build
+bash scripts/reset_dev_db.sh
+bash scripts/smoke_features.sh
+```

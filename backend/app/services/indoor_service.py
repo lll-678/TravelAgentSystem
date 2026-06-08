@@ -12,6 +12,10 @@ class IndoorRouteNotFoundError(ValueError):
     pass
 
 
+ROUTE_MODES = {"normal", "accessible"}
+ACCESSIBLE_EDGE_TYPES = {"corridor", "elevator"}
+
+
 def list_indoor_buildings_from_db(session: Session) -> dict[str, Any]:
     nodes = session.scalars(select(IndoorNode).order_by(IndoorNode.building_name, IndoorNode.floor)).all()
     grouped: dict[str, set[int]] = {}
@@ -29,7 +33,7 @@ def list_indoor_buildings_from_db(session: Session) -> dict[str, Any]:
         "total": len(items),
         "algorithm_trace": {
             "stage": "stage-15-indoor-navigation",
-            "source": "indoor_nodes deterministic seed",
+            "source": "indoor_nodes deterministic seed plus Stage 38 science museum schematic graph",
         },
     }
 
@@ -45,13 +49,14 @@ def list_indoor_nodes_from_db(session: Session, building_name: str | None = None
         "building_name": building_name,
         "algorithm_trace": {
             "stage": "stage-15-indoor-navigation",
-            "source": "indoor_nodes deterministic seed",
+            "source": "indoor_nodes deterministic seed plus Stage 38 science museum schematic graph",
         },
     }
 
 
 def plan_indoor_route_from_db(session: Session, payload: dict[str, Any]) -> dict[str, Any]:
     building_name = payload.get("building_name") or "综合教学楼"
+    route_mode = _normalize_route_mode(payload.get("route_mode"))
     nodes = list(
         session.scalars(
             select(IndoorNode)
@@ -72,12 +77,14 @@ def plan_indoor_route_from_db(session: Session, payload: dict[str, Any]) -> dict
             .order_by(IndoorEdge.id)
         ).all()
     )
-    route_edges = _dijkstra_indoor(edges, start_node.id, end_node.id)
+    route_edges = _dijkstra_indoor(edges, start_node.id, end_node.id, route_mode)
     path_nodes = _nodes_from_edges(start_node, route_edges)
     distance = sum(edge.distance for edge in route_edges)
     duration = sum(edge.duration for edge in route_edges)
+    vertical_traffic = sorted({edge.access_type for edge in route_edges if edge.access_type != "corridor"})
     return {
         "building_name": building_name,
+        "route_mode": route_mode,
         "start": _serialize_node(start_node),
         "end": _serialize_node(end_node),
         "distance": round(distance),
@@ -85,12 +92,16 @@ def plan_indoor_route_from_db(session: Session, payload: dict[str, Any]) -> dict
         "path": [_serialize_node(node) for node in path_nodes],
         "steps": _build_steps(start_node, route_edges),
         "algorithm_trace": {
-            "stage": "stage-15-indoor-navigation",
+            "stage": _stage_for_building(building_name),
             "algorithm": "Dijkstra shortest path on indoor_nodes/indoor_edges",
+            "source": _source_for_building(building_name),
+            "route_mode": route_mode,
             "nodes": str(len(nodes)),
             "edges": str(len(edges)),
+            "usable_edges": str(len([edge for edge in edges if _edge_allowed(edge, route_mode)])),
             "start_node_id": str(start_node.id),
             "end_node_id": str(end_node.id),
+            "vertical_traffic": ",".join(vertical_traffic) if vertical_traffic else "none",
         },
     }
 
@@ -111,11 +122,18 @@ def _resolve_node(nodes: list[IndoorNode], node_id: int | None, name: str | None
     raise IndoorRouteNotFoundError(f"Indoor node not found: {node_id or name}.")
 
 
-def _dijkstra_indoor(edges: list[IndoorEdge], start_node_id: int, end_node_id: int) -> list[IndoorEdge]:
+def _dijkstra_indoor(
+    edges: list[IndoorEdge],
+    start_node_id: int,
+    end_node_id: int,
+    route_mode: str,
+) -> list[IndoorEdge]:
     if start_node_id == end_node_id:
         return []
     graph: dict[int, list[IndoorEdge]] = {}
     for edge in edges:
+        if not _edge_allowed(edge, route_mode):
+            continue
         graph.setdefault(edge.from_node_id, []).append(edge)
         graph.setdefault(edge.to_node_id, []).append(_reverse_edge(edge))
 
@@ -174,10 +192,14 @@ def _build_steps(start_node: IndoorNode, edges: list[IndoorEdge]) -> list[dict[s
     for edge in edges:
         steps.append(
             {
-                "text": f"{current.floor} 层：{current.name} 到 {edge.to_node.name}，{_access_label(edge.access_type)}",
+                "text": (
+                    f"{_floor_label(current.floor)}："
+                    f"{current.name} 到 {edge.to_node.name}，{_access_label(edge.access_type)}"
+                ),
                 "from_node_id": current.id,
                 "to_node_id": edge.to_node_id,
                 "floor": edge.to_node.floor,
+                "floor_label": _floor_label(edge.to_node.floor),
                 "distance": round(edge.distance),
                 "duration": round(edge.duration),
                 "access_type": edge.access_type,
@@ -192,6 +214,7 @@ def _access_label(access_type: str) -> str:
         "corridor": "走廊",
         "elevator": "电梯",
         "stairs": "楼梯",
+        "escalator": "扶梯",
     }.get(access_type, access_type)
 
 
@@ -200,8 +223,40 @@ def _serialize_node(node: IndoorNode) -> dict[str, Any]:
         "id": node.id,
         "building_name": node.building_name,
         "floor": node.floor,
+        "floor_label": _floor_label(node.floor),
         "name": node.name,
         "node_type": node.node_type,
         "x": node.x,
         "y": node.y,
     }
+
+
+def _normalize_route_mode(route_mode: Any) -> str:
+    normalized = str(route_mode or "normal").strip().casefold()
+    if normalized in ROUTE_MODES:
+        return normalized
+    return "normal"
+
+
+def _edge_allowed(edge: IndoorEdge, route_mode: str) -> bool:
+    if route_mode != "accessible":
+        return True
+    return edge.access_type in ACCESSIBLE_EDGE_TYPES
+
+
+def _floor_label(floor: int) -> str:
+    if floor < 0:
+        return f"B{abs(floor)}"
+    return f"{floor}F"
+
+
+def _stage_for_building(building_name: str) -> str:
+    if building_name == "中国科学技术馆主展厅":
+        return "stage-38-indoor-navigation"
+    return "stage-15-indoor-navigation"
+
+
+def _source_for_building(building_name: str) -> str:
+    if building_name == "中国科学技术馆主展厅":
+        return "official China Science and Technology Museum public venue guide, represented as schematic graph"
+    return "deterministic teaching-building seed graph"

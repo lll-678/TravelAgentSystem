@@ -93,6 +93,7 @@ export interface IndoorNodeItem {
   id: number;
   building_name: string;
   floor: number;
+  floor_label?: string;
   name: string;
   node_type: string;
   x: number;
@@ -101,6 +102,7 @@ export interface IndoorNodeItem {
 
 export interface IndoorRoutePayload {
   building_name: string;
+  route_mode: string;
   start: IndoorNodeItem;
   end: IndoorNodeItem;
   distance: number;
@@ -111,6 +113,7 @@ export interface IndoorRoutePayload {
     from_node_id: number;
     to_node_id: number;
     floor: number;
+    floor_label?: string;
     distance: number;
     duration: number;
     access_type: string;

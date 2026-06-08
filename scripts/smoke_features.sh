@@ -202,6 +202,27 @@ with Session(engine) as session:
         "[smoke] indoor route: "
         f"distance={indoor_route['distance']}m floors={indoor_route['end']['floor']}"
     )
+    science_indoor_route = plan_indoor_route_from_db(
+        session,
+        {
+            "building_name": "中国科学技术馆主展厅",
+            "start_name": "西门入口",
+            "end_name": "4F 挑战与未来 C 厅",
+            "route_mode": "accessible",
+        },
+    )
+    require("science museum indoor route steps", len(science_indoor_route["steps"]), 4)
+    if science_indoor_route["end"]["floor"] != 4:
+        raise SystemExit("[smoke] science museum indoor route did not reach 4F")
+    if science_indoor_route["algorithm_trace"]["vertical_traffic"] != "elevator":
+        raise SystemExit("[smoke] science museum accessible route should use elevator vertical traffic")
+    if any(step["access_type"] in {"stairs", "escalator"} for step in science_indoor_route["steps"]):
+        raise SystemExit("[smoke] science museum accessible route used stairs/escalator")
+    print(
+        "[smoke] science museum indoor route: "
+        f"distance={science_indoor_route['distance']}m mode={science_indoor_route['route_mode']} "
+        f"end={science_indoor_route['end']['floor_label']}"
+    )
 
     facilities = get_nearby_facilities_from_db(
         session=session,

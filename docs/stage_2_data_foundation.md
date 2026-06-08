@@ -17,8 +17,8 @@
   - buildings: 60
   - facility categories: 10
   - facilities: 120
-  - indoor nodes: 19
-  - indoor edges: 20
+  - indoor nodes: 76 after Stage 38
+  - indoor edges: 94 after Stage 38
   - restaurants: 12
   - foods: 72
   - diaries: 20

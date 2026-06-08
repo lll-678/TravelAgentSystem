@@ -19,6 +19,7 @@ class IndoorRouteRequest(BaseModel):
     end_node_id: int | None = Field(default=None)
     start_name: str | None = Field(default="一层大门")
     end_name: str | None = Field(default="305 教室")
+    route_mode: str = Field(default="normal")
 
 
 @router.get("/buildings")

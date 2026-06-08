@@ -73,8 +73,8 @@ map_edges: 641
 buildings: 60
 facility_categories: 10
 facilities: 120
-indoor_nodes: 19
-indoor_edges: 20
+indoor_nodes: 76
+indoor_edges: 94
 restaurants: 12
 foods: 72
 diaries: 20

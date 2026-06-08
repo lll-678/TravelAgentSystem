@@ -2,7 +2,7 @@
 
 景点/学校推荐 + 多场景内部导航平台 MVP。
 
-当前仓库处于 **Stage 37 Real Destination Food POI** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC Agent 和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层、北邮沙河参考校园拓扑导入、双 POI 数据集、游记管理/交流的讲义要求对齐、管理员/普通用户角色登录与后台权限保护、AIGC 可解释轻量 Agent 工作流、北京颐和园内部导航场景、讲义要求下的美食 Top-K 推荐/模糊查询/路线距离排序，以及颐和园周边真实高德餐饮 POI 导入。
+当前仓库处于 **Stage 38 Indoor Navigation Upgrade** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC Agent 和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层、北邮沙河参考校园拓扑导入、双 POI 数据集、游记管理/交流的讲义要求对齐、管理员/普通用户角色登录与后台权限保护、AIGC 可解释轻量 Agent 工作流、北京颐和园内部导航场景、讲义要求下的美食 Top-K 推荐/模糊查询/路线距离排序、颐和园周边真实高德餐饮 POI 导入，以及中国科学技术馆主展厅 B1-5F 室内导航示意图。
 
 Scope clarification:
 
@@ -128,7 +128,7 @@ bash scripts/smoke_features.sh
 bash scripts/clean_demo_map_layers.sh
 ```
 
-These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 11 users, including `user01` as a normal user and `admin01` as an admin, 207 real China attraction/university destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 19 indoor nodes, 20 indoor edges, 12 restaurants, 72 foods, 20 diaries, and sample user feedback rows.
+These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 11 users, including `user01` as a normal user and `admin01` as an admin, 207 real China attraction/university destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 76 indoor nodes, 94 indoor edges, 12 restaurants, 72 foods, 20 diaries, and sample user feedback rows.
 
 `bash scripts/reset_dev_db.sh` resets the SQLite demo database and then calls `bash scripts/restore_campus_map.sh`, `bash scripts/restore_summer_palace_map.sh`, and `bash scripts/restore_summer_palace_foods.sh` when saved payloads exist, so BUPT Shahe, Summer Palace navigation, and Summer Palace nearby food recommendations survive reset.
 

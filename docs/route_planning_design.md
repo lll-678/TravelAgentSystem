@@ -15,8 +15,9 @@ Input:
 - `strategy`
 - `mode`
 - `route_source`
+- `scene_key`
 
-The user-facing campus navigation page is scoped to 北京邮电大学沙河校区内部场所. It should prefer `start_place_id` and `end_place_id` selected from `GET /api/v1/search/places?scope=campus`, which returns only campus buildings, facilities, and semantic named topology nodes inside the BUPT Shahe coordinate boundary. Raw coordinates remain as a fallback for debugging, imported data issues, and algorithm tests.
+The default user-facing navigation page is scoped to 北京邮电大学沙河校区内部场所. Stage 35 adds the second scene `summer_palace` for 北京颐和园. The page should prefer `start_place_id` and `end_place_id` selected from `GET /api/v1/search/places?scope=campus|scenic&scene_key=...`. Raw coordinates remain as a fallback for debugging, imported data issues, and algorithm tests.
 
 Output:
 
@@ -41,7 +42,9 @@ The BUPT campus navigation page defaults to `local_graph` because the imported c
 
 The service snaps start/end coordinates to nearest graph nodes, builds a bidirectional graph from `map_edges`, and runs Dijkstra shortest path.
 
-For campus-grade navigation, imported topology should come from real campus reference files when available. Place WGS84 source layers in `data/reference/bupt-shahe/raw_wgs84/` and graph topology in `data/reference/bupt-shahe/topology/`, then import them into `map_nodes` and `map_edges` through a validation script.
+For campus/scenic-grade navigation, imported topology should come from real reference files or OSMnx payloads when available. BUPT reference files live under `data/reference/bupt-shahe/`; Summer Palace raw payloads live under `data/external/summer-palace/`.
+
+All graph loading should filter by `scene_key`, with `bupt_shahe` as default.
 
 If a place ID is provided, the service resolves it first:
 

@@ -13,11 +13,29 @@ POIs are split by role:
 - `nearby_facilities`: school-surrounding POIs for nearby facility recommendation.
 - `campus_navigation`: BUPT Shahe internal POIs filtered by campus boundary for route endpoint/search support.
 
+Internal navigation now needs multiple scenes:
+
+- `bupt_shahe`: 北京邮电大学沙河校区.
+- `summer_palace`: 北京颐和园 scenic area.
+
+Map rows should be filtered by `scene_key` so importing one scene never replaces or pollutes another scene.
+
 ## Stored Layers
 
 - Roads: `map_nodes`, `map_edges`.
 - Buildings: `buildings` polygons.
 - Facilities: `facilities` points and `facility_categories`.
+
+Scene-scoped map tables:
+
+```text
+map_nodes.scene_key
+map_edges.scene_key
+buildings.scene_key
+facilities.scene_key
+```
+
+Default scene is `bupt_shahe` for backward compatibility.
 
 ## Coordinate Contract
 
@@ -41,5 +59,6 @@ Old overlays are cleared before redraw to avoid duplicate markers and stale rout
 - AMap POI import: manual/network-enabled facility enrichment path using `AMAP_WEB_API_KEY`, with `--dataset nearby_facilities|campus_navigation`.
 - Download-only source capture: `import_osm_campus.py --download-only --save-payload ...` and `import_amap_pois.py --download-only --save-raw ...`.
 - If Nominatim place lookup fails, importer falls back to configured center point and radius.
+- Summer Palace raw payloads belong under `data/external/summer-palace/`, not the BUPT directories.
 
 Raw reference files must be validated and imported into the database before API handlers use them.

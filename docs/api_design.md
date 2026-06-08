@@ -16,7 +16,10 @@ Base path: `/api/v1`.
 
 - `GET /map/stats`
 - `GET /map/geojson`
+  - default `scene_key=bupt_shahe`
+  - Stage 35 target: `scene_key=summer_palace`
 - `POST /routes/plan`
+  - default `scene_key=bupt_shahe`
   - accepts `start_place_id` / `end_place_id` from `GET /search/places?scope=campus`
   - keeps `start_lng/start_lat/end_lng/end_lat` as coordinate fallback
   - supports `route_source=auto|amap_walking|local_graph`
@@ -37,6 +40,7 @@ Base path: `/api/v1`.
 - `GET /search/places`
   - `scope=destinations`: nationwide attraction/school destinations
   - `scope=campus`: BUPT Shahe campus buildings/facilities/semantic named topology nodes only; generic road/intersection nodes are excluded
+  - Stage 35 target `scope=scenic&scene_key=summer_palace`: Summer Palace scenic buildings/facilities/semantic nodes
 - `GET /recommendations`
 
 Destination recommendation/search is for tourist attractions and schools/campuses. Campus navigation must use `scope=campus` so route endpoints do not come from the nationwide destination pool.

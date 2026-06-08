@@ -1,13 +1,13 @@
 # Smart Tour Guide
 
-景点/学校推荐 + 校园内部导航平台 MVP。
+景点/学校推荐 + 多场景内部导航平台 MVP。
 
-当前仓库处于 **Stage 32 AIGC Agent** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC Agent 和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层、北邮沙河参考校园拓扑导入、双 POI 数据集、游记管理/交流的讲义要求对齐、管理员/普通用户角色登录与后台权限保护，并把 AIGC 升级为可解释的轻量 Agent 工作流。
+当前仓库处于 **Stage 35 Multi-Scene Scenic Navigation** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把校园地图浏览、北邮沙河校区内部路线规划、室内导航、附近设施、景点/学校目的地搜索、目的地推荐、OSM/高德数据导入、游记社区、美食推荐、AIGC Agent 和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、用户兴趣编辑、高德 Web Service 真实 POI 导入、设施数据清洗、地点选择路线输入、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环、按目的地范围过滤的美食推荐、后台内容管理、真实优先地图图层、北邮沙河参考校园拓扑导入、双 POI 数据集、游记管理/交流的讲义要求对齐、管理员/普通用户角色登录与后台权限保护、AIGC 可解释轻量 Agent 工作流，并开始扩展北京颐和园内部导航场景。
 
 Scope clarification:
 
 - 推荐模块面向不同景点和学校，按热度、评分、个人兴趣和行为反馈输出 Top 10 目的地。
-- 导航模块当前面向北京邮电大学沙河校区内部地图，处理校门、楼宇、设施和室内外路线。
+- 导航模块按 `scene_key` 隔离内部地图，默认面向北京邮电大学沙河校区，新增场景面向北京颐和园。
 - 校园建筑和设施用于地图、搜索、场所查询和路线输入，默认不作为旅游推荐候选。
 
 ## Target Stack
@@ -330,6 +330,7 @@ python backend/scripts/smoke_amap_route.py
 - `docs/stage_32_aigc_agent.md`: AIGC Agent workflow implementation, API contract, trace schema, and acceptance criteria.
 - `docs/stage_33_campus_map_restore.md`: reset-safe BUPT Shahe campus map restore notes.
 - `docs/stage_34_nearby_facility_origin.md`: nearby-facility origin selection plan and acceptance criteria.
+- `docs/stage_35_multi_scene_scenic_navigation.md`: multi-scene navigation and Summer Palace scenic navigation plan.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

@@ -2,7 +2,7 @@
 
 ## Project
 
-Smart Tour Guide: 景点/学校推荐 + 校园内部导航 MVP。
+Smart Tour Guide: 景点/学校推荐 + 多场景内部导航 MVP。
 
 ## Target Stack
 
@@ -51,9 +51,12 @@ data/external/      downloaded third-party OSM/AMap source payloads before clean
 - Destination recommendation covers attractions and schools/campuses.
 - Destination search/recommendation uses `destinations` rows and `GET /api/v1/search/places?scope=destinations` when place-search autocomplete is needed.
 - Campus buildings/facilities/user-facing named topology nodes are route and map entities, not tourism recommendation candidates unless also modeled in `destinations`.
-- Navigation features are BUPT Shahe campus-internal for the current demo.
+- Internal navigation is scene-scoped. Default scene is `bupt_shahe`; Stage 35 adds `summer_palace`.
+- Valid current scene keys are `bupt_shahe` for 北京邮电大学沙河校区 and `summer_palace` for 北京颐和园.
 - RoutePlannerPage endpoint autocomplete must use `GET /api/v1/search/places?scope=campus`, may expose `building-{id}`, `facility-{id}`, and semantic `node-{id}` endpoints, and must not expose `destination-{id}` or generic road/intersection nodes as route endpoints.
 - Maintain two POI datasets: `nearby_facilities` for school-surrounding facility recommendation, and `campus_navigation` for BUPT Shahe internal navigation POIs.
+- Scene-scoped tables are `map_nodes.scene_key`, `map_edges.scene_key`, `buildings.scene_key`, and `facilities.scene_key`.
+- All map/search/route/nearby-facility APIs must default to `scene_key=bupt_shahe` and must not mix rows across scenes.
 - Backend stores and plans routes using OSM/PostGIS data.
 - Manually supplied campus source files live under `data/reference/bupt-shahe/`.
 - `data/reference/bupt-shahe/raw_wgs84/` stores original WGS84 JSON/GeoJSON source layers.
@@ -62,6 +65,7 @@ data/external/      downloaded third-party OSM/AMap source payloads before clean
 - Frontend renders maps with AMap JS API.
 - Optional backend POI enrichment imports AMap GCJ-02 POIs, converts them to WGS84, and stores them as local facilities.
 - AMap raw GCJ-02 payloads belong under `data/external/bupt-shahe/amap_gcj02/`, not `data/reference/bupt-shahe/raw_wgs84/`.
+- Summer Palace raw OSM/AMap payloads belong under `data/external/summer-palace/`.
 - API coordinates are WGS84 longitude/latitude.
 - AMap overlays must receive `[lng, lat]`.
 - Default map center: `[116.28333, 40.15608]` for 北京邮电大学沙河校区.

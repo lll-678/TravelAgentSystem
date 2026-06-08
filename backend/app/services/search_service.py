@@ -169,6 +169,8 @@ def _search_map_nodes(
     for node in nodes:
         if not node.name:
             continue
+        if not _is_user_selectable_topology_node(node):
+            continue
         if campus_only and not _is_in_bupt_shahe_bounds(node.lng, node.lat):
             continue
         text = " ".join([node.name, node.external_id, "campus_node", "route_node"]).casefold()
@@ -190,6 +192,17 @@ def _search_map_nodes(
     return results
 
 
+def _is_user_selectable_topology_node(node: MapNode) -> bool:
+    name = node.name or ""
+    normalized_name = name.casefold()
+    if any(token in normalized_name for token in ["路口", "道路节点", "校园路口", "intersection", "node_auto"]):
+        return False
+    if not node.external_id.startswith("ref-bupt-shahe:"):
+        return False
+    raw_id = node.external_id.split(":", maxsplit=1)[1]
+    return not raw_id.startswith("node_auto_")
+
+
 def _normalize_scope(scope: str | None) -> str:
     if scope in {"all", "destinations", "campus"}:
         return scope
@@ -199,7 +212,7 @@ def _normalize_scope(scope: str | None) -> str:
 def _scope_sources(scope: str) -> str:
     return {
         "destinations": "destinations",
-        "campus": "BUPT Shahe campus buildings, facilities, named topology nodes",
+        "campus": "BUPT Shahe campus buildings, facilities, semantic named topology nodes",
     }.get(scope, "destinations, buildings, facilities")
 
 

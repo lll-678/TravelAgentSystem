@@ -18,7 +18,8 @@
 - RoutePlannerPage is now scoped to 北京邮电大学沙河校区内部导航:
   - endpoint search calls `GET /api/v1/search/places?scope=campus`
   - nationwide attraction/school destinations are excluded from route endpoint candidates
-  - named topology nodes are exposed as `node-{id}` route endpoints, so entrances and internal campus points from the reference graph can be selected directly
+  - semantic named topology nodes are exposed as `node-{id}` route endpoints, so entrances and internal campus points from the reference graph can be selected directly
+  - generic road/intersection nodes are filtered out of the route endpoint selector
   - user-facing route source defaults to `local_graph` over the imported campus topology
   - map overlays on the route page filter facilities/buildings to the BUPT Shahe campus boundary
 

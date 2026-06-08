@@ -16,7 +16,7 @@ Input:
 - `mode`
 - `route_source`
 
-The user-facing campus navigation page is scoped to 北京邮电大学沙河校区内部场所. It should prefer `start_place_id` and `end_place_id` selected from `GET /api/v1/search/places?scope=campus`, which returns only campus buildings, facilities, and named topology nodes inside the BUPT Shahe coordinate boundary. Raw coordinates remain as a fallback for debugging, imported data issues, and algorithm tests.
+The user-facing campus navigation page is scoped to 北京邮电大学沙河校区内部场所. It should prefer `start_place_id` and `end_place_id` selected from `GET /api/v1/search/places?scope=campus`, which returns only campus buildings, facilities, and semantic named topology nodes inside the BUPT Shahe coordinate boundary. Raw coordinates remain as a fallback for debugging, imported data issues, and algorithm tests.
 
 Output:
 
@@ -47,11 +47,11 @@ If a place ID is provided, the service resolves it first:
 
 - `building-{id}` uses the building polygon center
 - `facility-{id}` uses facility coordinates
-- `node-{id}` uses a named `map_nodes` coordinate from the imported campus topology
+- `node-{id}` uses a semantic named `map_nodes` coordinate from the imported campus topology
 
 Then the resolved coordinate is snapped to the nearest graph node.
 
-`destination-{id}` is still accepted by the backend for backward compatibility and smoke tests, but the BUPT campus navigation UI and `scope=campus` search do not expose destination IDs as route endpoints.
+`destination-{id}` is still accepted by the backend for backward compatibility and smoke tests, but the BUPT campus navigation UI and `scope=campus` search do not expose destination IDs as route endpoints. Generic road/intersection nodes such as `校园路口` and `道路节点` are also filtered out of user-facing endpoint search.
 
 Current snapping is node-based. The next improvement is edge projection with temporary virtual nodes, so facilities/buildings that lie along long path segments can route from the nearest point on an edge instead of the nearest graph node.
 

@@ -32,6 +32,8 @@ def test_reference_campus_import_uses_supplied_wgs84_files() -> None:
         end = search_places_from_db(session, "图书馆", None, 5)["items"][0]
         campus_nodes = search_places_from_db(session, "学生活动中心", None, 10, scope="campus")["items"]
         initial_campus_candidates = search_places_from_db(session, "", None, 10, scope="campus")["items"]
+        intersection_candidates = search_places_from_db(session, "路口", None, 20, scope="campus")["items"]
+        auto_node_candidates = search_places_from_db(session, "操场", None, 20, scope="campus")["items"]
         node_start = next(item for item in campus_nodes if item["source"] == "node")
         library_nodes = search_places_from_db(session, "图书馆", None, 10, scope="campus")["items"]
         node_end = next(item for item in library_nodes if item["source"] == "node")
@@ -68,6 +70,8 @@ def test_reference_campus_import_uses_supplied_wgs84_files() -> None:
     assert len(route["path"]) >= 2
     assert route["algorithm_trace"]["topology_source"] == "local map_nodes/map_edges graph"
     assert any(item["source"] == "node" for item in initial_campus_candidates)
+    assert all(item["source"] != "node" for item in intersection_candidates)
+    assert all(item["source"] != "node" for item in auto_node_candidates)
     assert node_start["id"].startswith("node-")
     assert node_route["start"]["source"] == "node"
     assert node_route["end"]["source"] == "node"

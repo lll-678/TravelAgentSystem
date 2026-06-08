@@ -41,6 +41,8 @@ This split is intentional: AMap route data gives a more credible user-facing cam
 
 The service snaps start/end coordinates to nearest graph nodes, builds a bidirectional graph from `map_edges`, and runs Dijkstra shortest path.
 
+For campus-grade navigation, imported topology should come from real campus reference files when available. Place WGS84 source layers in `data/reference/bupt-shahe/raw_wgs84/` and graph topology in `data/reference/bupt-shahe/topology/`, then import them into `map_nodes` and `map_edges` through a validation script.
+
 If a place ID is provided, the service resolves it first:
 
 - `destination-{id}` uses destination coordinates
@@ -48,6 +50,8 @@ If a place ID is provided, the service resolves it first:
 - `facility-{id}` uses facility coordinates
 
 Then the resolved coordinate is snapped to the nearest graph node.
+
+Current snapping is node-based. The next improvement is edge projection with temporary virtual nodes, so facilities/buildings that lie along long path segments can route from the nearest point on an edge instead of the nearest graph node.
 
 For `amap_walking`, the service resolves the same place IDs, converts WGS84 to GCJ-02 for AMap, calls the walking route Web Service, and converts the returned polyline back to WGS84.
 

@@ -26,6 +26,8 @@
 - [x] Facility categories count >= 10.
 - [x] `GET /api/v1/map/stats` reads the local database and returns map scale counts.
 - [x] OSM import pipeline can import an OSM-shaped payload into map tables.
+- [x] Reference campus source directory is documented for WGS84 JSON/GeoJSON and topology files.
+- [ ] Reference campus import script validates and imports `data/reference/bupt-shahe/` files into map tables.
 - [x] Admin map import/status API reports current map table counts.
 
 ## Users

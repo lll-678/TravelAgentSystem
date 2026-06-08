@@ -31,6 +31,7 @@ infra/nginx/      reverse proxy config
 media/            local uploaded files
 scripts/          bash check/seed/reset scripts
 tests/fixtures/   deterministic small test fixtures
+data/reference/   committed reference source data for campus navigation imports
 ```
 
 ## Environment
@@ -54,6 +55,15 @@ AMAP_WEB_API_KEY=your_amap_web_service_api_key
 ```
 
 The frontend `VITE_AMAP_KEY` is used only for browser rendering. Backend map layers now prefer real imported data: OSMnx/OpenStreetMap for roads and building polygons, AMap Web Service for dense POIs, and OSM amenities as an additional POI source. The deterministic seed graph remains hidden by default and is retained for offline tests and local Dijkstra fallback.
+
+Manually supplied campus map source files should be placed under:
+
+```text
+data/reference/bupt-shahe/raw_wgs84/
+data/reference/bupt-shahe/topology/
+```
+
+Use `raw_wgs84/` for original WGS84 JSON/GeoJSON layers and `topology/` for the WGS84 road graph. Do not put these files in `backend/cache/`, `frontend/public/`, or the repository root. Future import scripts should validate and import them into the database before APIs use them.
 
 Default campus:
 
@@ -270,6 +280,7 @@ python backend/scripts/smoke_amap_route.py
 - `docs/stage_25_admin_moderation.md`: admin edit endpoints and diary moderation notes.
 - `docs/stage_26_optional_map_smoke.md`: optional AMap browser screenshot smoke notes.
 - `docs/stage_27_real_map_layers.md`: real-priority OSM + AMap POI map layer cleanup and import notes.
+- `docs/campus_navigation_data_plan.md`: reference campus data placement, validation, and import plan.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

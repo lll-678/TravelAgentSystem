@@ -12,6 +12,7 @@ Use a hybrid route strategy:
 - If `AMAP_WEB_API_KEY` is available and mode is `walk`, `auto` uses AMap Web Service walking directions.
 - If AMap is unavailable, or `route_source=local_graph`, backend falls back to local Dijkstra over `map_nodes/map_edges`.
 - Local Dijkstra remains necessary for algorithm demonstration, transport-mode experiments, and network-free tests.
+- When manually supplied WGS84 campus topology is available, it should become the preferred local graph source after validation/import.
 
 ## Coordinate Contract
 
@@ -78,4 +79,5 @@ Result:
 
 - AMap walking route is external API data, not a hand-built road graph.
 - Bike/electric-cart route modes still use local graph data.
-- For a fully algorithmic real route graph, the project still needs a verified campus walk-path dataset.
+- For a fully algorithmic real route graph, import the verified campus walk-path dataset from `data/reference/bupt-shahe/`.
+- Current local snapping is nearest-node based; edge projection with temporary virtual nodes remains the next precision upgrade.

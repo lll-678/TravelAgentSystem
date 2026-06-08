@@ -27,6 +27,7 @@ infra/nginx/        Nginx config
 media/              local uploaded media, gitignored except placeholders
 scripts/            project-level bash helpers
 tests/fixtures/     small shared fixtures for backend/frontend tests
+data/reference/     committed reference source data for real campus navigation imports
 ```
 
 ## Do Not
@@ -38,6 +39,8 @@ tests/fixtures/     small shared fixtures for backend/frontend tests
 - Do not hard-code the AMap Web Service key; read it from `AMAP_WEB_API_KEY`.
 - Do not use AMap as the backend routing topology source; AMap may enrich POIs, but backend routes must use OSMnx/OSM or local graph data.
 - Do not present deterministic seed points as real campus data. Label them as offline fallback/demo data.
+- Do not put real campus source files in `backend/cache/`, `frontend/public/`, or root-level scratch paths.
+- Do not read raw reference files directly in request handlers; import them through a validation/cleaning script first.
 - Do not rely on remote services in required tests.
 - Do not commit generated databases, uploads, caches, `node_modules`, or build outputs.
 - Do not silently change public API paths without updating docs and checks.
@@ -48,6 +51,10 @@ tests/fixtures/     small shared fixtures for backend/frontend tests
 - Campus buildings/facilities are route and map entities, not tourism recommendation candidates unless also modeled in `destinations`.
 - Navigation features are school/campus-internal after a campus destination is selected.
 - Backend stores and plans routes using OSM/PostGIS data.
+- Manually supplied campus source files live under `data/reference/bupt-shahe/`.
+- `data/reference/bupt-shahe/raw_wgs84/` stores original WGS84 JSON/GeoJSON source layers.
+- `data/reference/bupt-shahe/topology/` stores original WGS84 road graph topology files.
+- `data/reference/bupt-shahe/processed/` stores cleaned intermediate outputs, not API runtime state.
 - Frontend renders maps with AMap JS API.
 - Optional backend POI enrichment imports AMap GCJ-02 POIs, converts them to WGS84, and stores them as local facilities.
 - API coordinates are WGS84 longitude/latitude.

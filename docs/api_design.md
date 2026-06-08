@@ -77,7 +77,7 @@ Destination recommendation/search is for tourist attractions and schools/campuse
   - accepts `media_urls` from scenic/school diary media
   - returns storyboard scenes, reusable prompt, and simulated video link
 - `POST /aigc/agent/run`
-  - planned Stage 32 endpoint for a lightweight AIGC workflow Agent
+  - Stage 32 endpoint for a lightweight AIGC workflow Agent
   - accepts task, text, destination context, style, scene count, optional user/diary id, and `media_urls`
   - orchestrates deterministic local tools first: media analyzer, diary writer, storyboard planner, prompt builder, mock video generator, and compression summary
   - returns `result`, `agent_trace.steps[]`, and `algorithm_trace`

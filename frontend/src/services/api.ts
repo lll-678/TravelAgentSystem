@@ -352,6 +352,53 @@ export interface AigcStoryboardPayload {
   algorithm_trace: Record<string, string>;
 }
 
+export interface AigcAgentStep {
+  step: number;
+  tool: string;
+  input_summary: string;
+  output_summary: string;
+  status: string;
+  duration_ms: number;
+}
+
+export interface AigcAgentScene {
+  index: number;
+  title: string;
+  description: string;
+  narration: string;
+  duration_seconds: number;
+}
+
+export interface AigcAgentPayload {
+  result: {
+    title: string;
+    draft: string;
+    storyboard: AigcAgentScene[];
+    prompt: string;
+    simulated_video_url: string;
+    compression: {
+      algorithm: string;
+      original_size: number;
+      compressed_size: number;
+      compression_ratio: number;
+      summary: string;
+    };
+    media_analysis: {
+      media_count: number;
+      image_count: number;
+      video_count: number;
+      other_count: number;
+      keywords: string[];
+      summary: string;
+    };
+  };
+  agent_trace: {
+    steps: AigcAgentStep[];
+    total_duration_ms: number;
+  };
+  algorithm_trace: Record<string, string>;
+}
+
 export interface AdminStatsPayload {
   map: Record<string, number>;
   tables: Record<string, number>;

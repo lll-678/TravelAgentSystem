@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.api.v1.admin import admin_stats
 from app.db.session import create_app_engine
+from app.services.aigc_agent_service import run_aigc_agent
 from app.services.aigc_service import generate_diary_draft, generate_storyboard
 from app.services.destination_service import list_destinations_from_db
 from app.services.diary_service import list_diaries_from_db
@@ -205,7 +206,22 @@ with Session(engine) as session:
 draft = generate_diary_draft({"topic": "沙河校区路线", "keywords": ["食堂", "图书馆"], "tone": "自然"})
 storyboard = generate_storyboard({"text": draft["draft"], "scene_count": 3})
 require("aigc scenes", len(storyboard["scenes"]), 3)
-print(f"[smoke] aigc: title={draft['title']} scenes={len(storyboard['scenes'])}")
+agent = run_aigc_agent(
+    {
+        "task": "diary_animation",
+        "text": draft["draft"],
+        "destination_name": "北京邮电大学沙河校区",
+        "media_urls": ["/media/demo/campus-photo.jpg"],
+        "scene_count": 3,
+    }
+)
+require("aigc agent steps", len(agent["agent_trace"]["steps"]), 4)
+require("aigc agent scenes", len(agent["result"]["storyboard"]), 3)
+print(
+    "[smoke] aigc: "
+    f"title={draft['title']} legacy_scenes={len(storyboard['scenes'])} "
+    f"agent_steps={len(agent['agent_trace']['steps'])}"
+)
 
 print(f"[smoke] OK using API_DATABASE_URL={settings.api_database_url}")
 PY

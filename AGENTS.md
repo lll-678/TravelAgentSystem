@@ -70,7 +70,7 @@ data/external/      downloaded third-party OSM/AMap source payloads before clean
 
 - AIGC animation remains a deterministic local simulation unless a real external model provider is explicitly configured.
 - Do not present mock video links as real generated videos.
-- The next AIGC enhancement target is a lightweight workflow Agent exposed as `POST /api/v1/aigc/agent/run`.
+- The AIGC Agent is exposed as `POST /api/v1/aigc/agent/run`.
 - Agent responses must include `agent_trace.steps[]` with tool name, status, timing, input summary, and output summary.
 - Keep `POST /api/v1/aigc/diary-draft` and `POST /api/v1/aigc/storyboard` backward-compatible.
 - Agent tools should be small deterministic functions first: media analyzer, diary writer, storyboard planner, prompt builder, mock video generator, and compression summary.

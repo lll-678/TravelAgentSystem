@@ -3,7 +3,7 @@ from app.models.diary import Diary, DiaryComment, DiaryMedia, DiaryRating, Diary
 from app.models.food import Food, Restaurant
 from app.models.indoor import IndoorEdge, IndoorNode
 from app.models.map import Building, Facility, FacilityCategory, MapEdge, MapNode
-from app.models.user import User, UserInterest, UserProfile
+from app.models.user import User, UserBehaviorLog, UserFavorite, UserInterest, UserProfile, UserRating
 
 __all__ = [
     "Building",
@@ -24,6 +24,9 @@ __all__ = [
     "MapNode",
     "Restaurant",
     "User",
+    "UserBehaviorLog",
+    "UserFavorite",
     "UserInterest",
     "UserProfile",
+    "UserRating",
 ]

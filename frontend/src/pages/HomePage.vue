@@ -47,6 +47,7 @@ import { apiGet, type DestinationItem, type RecommendationPayload } from "../ser
 const strategy = ref("composite");
 const recommendations = ref<DestinationItem[]>([]);
 const strategyOptions = [
+  { label: "行为", value: "behavior" },
   { label: "综合", value: "composite" },
   { label: "热门", value: "hot" },
   { label: "高分", value: "rating" },

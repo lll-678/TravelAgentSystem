@@ -5,7 +5,19 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.session import get_db
-from app.models import Destination, Diary, Facility, Food, IndoorEdge, IndoorNode, Restaurant, User
+from app.models import (
+    Destination,
+    Diary,
+    Facility,
+    Food,
+    IndoorEdge,
+    IndoorNode,
+    Restaurant,
+    User,
+    UserBehaviorLog,
+    UserFavorite,
+    UserRating,
+)
 from app.services.amap_import_service import AMapPoiImportError, import_amap_pois_to_db
 from app.services.osm_import_service import (
     OsmImportError,
@@ -36,6 +48,9 @@ def admin_stats(db: Session = Depends(get_db)) -> dict:
         "map": get_map_import_status(db),
         "tables": {
             "users": _count(db, User),
+            "user_favorites": _count(db, UserFavorite),
+            "user_ratings": _count(db, UserRating),
+            "user_behavior_logs": _count(db, UserBehaviorLog),
             "destinations": _count(db, Destination),
             "facilities": _count(db, Facility),
             "restaurants": _count(db, Restaurant),

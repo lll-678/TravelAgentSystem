@@ -4,12 +4,12 @@ Status values: `planned`, `scaffolded`, `implemented`, `tested`.
 
 | Module | Core Feature | API | Frontend Page | Main Tables | Test Status |
 | --- | --- | --- | --- | --- | --- |
-| Users | Register, login, token auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/users/me` | Login | `users`, `user_profiles`, `user_interests` | planned |
+| Users | Register, login, token auth | `POST /api/v1/users/register`, `POST /api/v1/users/login`, `GET /api/v1/users/me` | UserPreferencePage | `users`, `user_profiles`, `user_interests` | tested: PBKDF2 password hash + HMAC demo token |
 | Users | Profile and editable interests | `GET /api/v1/users`, `GET /api/v1/users/{id}`, `PUT /api/v1/users/{id}/interests` | UserPreferencePage | `users`, `user_profiles`, `user_interests` | tested: preference update changes recommendation trace |
-| Users | Favorites, behavior logs, ratings | `POST /api/favorites`, `POST /api/behavior`, `POST /api/ratings` | Profile | `user_favorites`, `user_behavior_logs`, `user_ratings` | planned |
+| Users | Favorites, behavior logs, ratings | `POST /api/v1/users/{id}/favorites`, `POST /api/v1/users/{id}/behavior`, `POST /api/v1/users/{id}/ratings` | UserPreferencePage, DestinationListPage | `user_favorites`, `user_behavior_logs`, `user_ratings` | tested: favorite/rating/view feed recommendation and aggregate rating |
 | Destinations | List, detail, category filter | `GET /api/v1/destinations`, `GET /api/v1/destinations/{id}` | Destinations | `destinations`, `destination_tags` | tested: DB-backed API + page |
 | Destinations | Search by name/category/keyword | `GET /api/v1/search/places` | Destinations/Search | `destinations`, `buildings`, `facilities` | tested: contains search across places |
-| Recommendation | Hot/high-rating/interest/composite | `GET /api/v1/recommendations` | Home | `destinations`, `user_interests` | tested: rule scoring + Top-K heap |
+| Recommendation | Hot/high-rating/interest/behavior/composite | `GET /api/v1/recommendations` | Home, UserPreferencePage | `destinations`, `user_interests`, `user_favorites`, `user_ratings`, `user_behavior_logs` | tested: rule scoring + Top-K heap + feedback signal |
 | Map Data | Seeded map data stats and layer API | `GET /api/v1/map/stats`, `GET /api/v1/map/nodes`, `GET /api/v1/map/edges`, `GET /api/v1/map/buildings`, `GET /api/v1/map/facilities` | MapGuidePage, Admin Dashboard | `map_nodes`, `map_edges`, `buildings`, `facilities`, `facility_categories` | tested: DB-backed seed API |
 | Map Data | OSM import and admin import status | `POST /api/v1/admin/map/import`, `GET /api/v1/admin/map/import/status`, `GET /api/v1/admin/stats` | Admin Dashboard | `map_nodes`, `map_edges`, `buildings`, `facilities` | tested: fixture import + OSMnx source path |
 | Map Data | AMap real POI enrichment | `POST /api/v1/admin/map/import` with `source=amap_poi`, CLI `backend/scripts/import_amap_pois.py` | Admin Dashboard | `facilities`, `facility_categories`, `map_nodes` | tested: mocked AMap response + clean live import of 516 facility rows |
@@ -29,7 +29,7 @@ Status values: `planned`, `scaffolded`, `implemented`, `tested`.
 | Food | Restaurant/item list, cuisine filter, fuzzy search | `GET /api/v1/foods/restaurants`, `GET /api/v1/foods/items`, `GET /api/v1/foods/search` | FoodRecommendPage | `foods`, `restaurants` | tested: DB-backed API + page |
 | Food | Hot/rating/distance recommendation and nearby route preview | `GET /api/v1/foods/recommend`, `GET /api/v1/foods/nearby` | FoodRecommendPage | `foods`, `restaurants`, `user_interests`, `map_edges` | tested: scoring + Top-K + route path |
 | Food | Explicit heat/rating/distance sort for fuzzy results | `GET /api/v1/foods/search` | FoodRecommendPage | `foods`, `restaurants` | tested: required by `要求.md` |
-| Food | Destination-scoped filtering | `GET /api/v1/foods/recommend` future destination parameter | FoodRecommendPage | future destination linkage | planned |
+| Food | Destination-scoped filtering | `GET /api/v1/foods/recommend?destination_id=...`, `GET /api/v1/foods/search?destination_id=...`, `GET /api/v1/foods/nearby?destination_id=...` | FoodRecommendPage | `restaurants.destination_id`, `destinations` | tested: destination-linked or nearby restaurant scope |
 | AIGC | Diary draft and storyboard prompt | `POST /api/v1/aigc/diary-draft`, `POST /api/v1/aigc/storyboard` | AigcAssistantPage | mock service | tested: deterministic placeholder |
 | AIGC | Photo-driven tourism animation generation | `POST /api/v1/aigc/storyboard` with `media_urls` | AigcAssistantPage | `diary_media` | tested: mock storyboard accepts media inputs |
 | Admin | Data dashboard and OSM import status | `GET /api/v1/admin/stats`, `GET /api/v1/admin/map/import/status` | AdminDashboardPage | all core tables | tested: stats API + page |

@@ -28,14 +28,14 @@
 
 ## Users
 
-- [ ] User can register.
-- [ ] User can log in and receive token.
-- [ ] Profile shows nickname, avatar, interests, favorites.
+- [x] User can register.
+- [x] User can log in and receive token.
+- [x] Profile shows nickname, avatar, interests, favorites.
 - [x] Profile shows nickname and interests.
 - [x] User can edit interests from the frontend.
-- [ ] User can select preferred destinations/schools before recommendation.
+- [x] User can select preferred destinations/schools before recommendation.
 - [x] Interest changes affect recommendation output.
-- [ ] Behavior logs are recorded after browsing/rating/favorite actions.
+- [x] Behavior logs are recorded after browsing/rating/favorite actions.
 
 ## Destinations And Recommendations
 
@@ -95,7 +95,7 @@
 - [x] Cuisine filter works.
 - [x] Fuzzy search handles close spelling.
 - [x] Food recommendations change with current location.
-- [ ] Food recommendation can be scoped to the selected destination/school.
+- [x] Food recommendation can be scoped to the selected destination/school.
 - [x] Food fuzzy search results can be explicitly sorted by heat, rating, and distance.
 
 ## AIGC

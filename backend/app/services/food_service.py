@@ -5,22 +5,32 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.algorithms.ranking import top_k_smallest
 from app.algorithms.route_planning import RouteNotFoundError, approximate_distance_meters
-from app.models import Food, Restaurant, UserInterest
+from app.models import Destination, Food, Restaurant, UserInterest
 from app.seed.sample_data import BUPT_SHAHE_CENTER
 from app.services.route_service import plan_route_from_db
 
 
-def list_restaurants_from_db(session: Session, limit: int, offset: int) -> dict[str, Any]:
-    restaurants = _load_restaurants(session)
+DESTINATION_FOOD_SCOPE_METERS = 1500
+
+
+def list_restaurants_from_db(
+    session: Session,
+    destination_id: int | None,
+    limit: int,
+    offset: int,
+) -> dict[str, Any]:
+    destination = _load_destination(session, destination_id)
+    restaurants = _filter_restaurants_by_destination(_load_restaurants(session), destination)
     items = restaurants[offset : offset + limit]
     return {
         "items": [serialize_restaurant(restaurant) for restaurant in items],
         "total": len(restaurants),
+        "destination_id": destination_id,
         "limit": limit,
         "offset": offset,
         "algorithm_trace": {
             "stage": "stage-9-food-aigc-admin",
-            "source": "restaurants seeded database",
+            "source": "restaurants seeded database with optional destination scope",
             "returned": str(len(items)),
         },
     }
@@ -30,20 +40,23 @@ def list_food_items_from_db(
     session: Session,
     cuisine: str | None,
     restaurant_id: int | None,
+    destination_id: int | None,
     limit: int,
     offset: int,
 ) -> dict[str, Any]:
-    foods = _filter_foods(_load_foods(session), cuisine, restaurant_id)
+    destination = _load_destination(session, destination_id)
+    foods = _filter_foods(_load_foods(session), cuisine, restaurant_id, destination)
     items = foods[offset : offset + limit]
     return {
         "items": [serialize_food(food) for food in items],
         "total": len(foods),
         "limit": limit,
         "offset": offset,
+        "destination_id": destination_id,
         "cuisines": _load_cuisines(session),
         "algorithm_trace": {
             "stage": "stage-9-food-aigc-admin",
-            "filter": "cuisine and restaurant_id",
+            "filter": "cuisine, restaurant_id, and destination scope",
             "returned": str(len(items)),
         },
     }
@@ -53,15 +66,17 @@ def search_foods_from_db(
     session: Session,
     q: str,
     cuisine: str | None,
+    destination_id: int | None,
     limit: int,
     sort: str = "match",
     current_lng: float | None = None,
     current_lat: float | None = None,
 ) -> dict[str, Any]:
     keyword = q.casefold().strip()
-    current = _resolve_current(current_lng, current_lat)
+    destination = _load_destination(session, destination_id)
+    current = _resolve_current(current_lng, current_lat, destination)
     scored = []
-    for food in _filter_foods(_load_foods(session), cuisine, None):
+    for food in _filter_foods(_load_foods(session), cuisine, None, destination):
         rank = _food_match_rank(food, keyword)
         if rank is None:
             continue
@@ -78,10 +93,12 @@ def search_foods_from_db(
         "total": len(scored),
         "keyword": q,
         "cuisine": cuisine,
+        "destination_id": destination_id,
         "sort": sort,
         "algorithm_trace": {
             "stage": "stage-9-food-aigc-admin",
             "algorithm": "contains plus lightweight Levenshtein fuzzy search",
+            "scope": "destination-linked or nearby restaurants" if destination is not None else "all restaurants",
             "sort": sort,
             "matched": str(len(scored)),
             "returned": str(len(results)),
@@ -92,14 +109,16 @@ def search_foods_from_db(
 def recommend_foods_from_db(
     session: Session,
     cuisine: str | None,
+    destination_id: int | None,
     user_id: int | None,
     current_lng: float | None,
     current_lat: float | None,
     limit: int,
 ) -> dict[str, Any]:
-    foods = _filter_foods(_load_foods(session), cuisine, None)
+    destination = _load_destination(session, destination_id)
+    foods = _filter_foods(_load_foods(session), cuisine, None, destination)
     interests = _load_user_interests(session, user_id)
-    current = _resolve_current(current_lng, current_lat)
+    current = _resolve_current(current_lng, current_lat, destination)
     max_food_heat = max((food.heat for food in foods), default=1)
     max_restaurant_heat = max((food.restaurant.heat for food in foods), default=1)
 
@@ -112,10 +131,13 @@ def recommend_foods_from_db(
         "items": items,
         "total": len(foods),
         "cuisine": cuisine,
+        "destination_id": destination_id,
         "user_id": user_id,
         "algorithm_trace": {
-            "stage": "stage-9-food-aigc-admin",
+            "stage": "stage-24-destination-scoped-food",
             "algorithm": "rating + food heat + restaurant heat + cuisine interest + distance + price scoring, Top-K heap",
+            "scope": "destination-linked or nearby restaurants" if destination is not None else "all restaurants",
+            "scope_radius_meters": str(DESTINATION_FOOD_SCOPE_METERS),
             "returned": str(len(items)),
             "interest_tags": ",".join(sorted(interests)) if interests else "",
         },
@@ -127,12 +149,14 @@ def nearby_foods_from_db(
     current_lng: float | None,
     current_lat: float | None,
     cuisine: str | None,
+    destination_id: int | None,
     radius: int,
     limit: int,
 ) -> dict[str, Any]:
-    current = _resolve_current(current_lng, current_lat)
+    destination = _load_destination(session, destination_id)
+    current = _resolve_current(current_lng, current_lat, destination)
     enriched = []
-    for food in _filter_foods(_load_foods(session), cuisine, None):
+    for food in _filter_foods(_load_foods(session), cuisine, None, destination):
         route = _route_to_restaurant(session, current, food.restaurant)
         if route["distance"] > radius:
             continue
@@ -146,9 +170,11 @@ def nearby_foods_from_db(
         "total": len(enriched),
         "radius": radius,
         "cuisine": cuisine,
+        "destination_id": destination_id,
         "algorithm_trace": {
-            "stage": "stage-9-food-aigc-admin",
+            "stage": "stage-24-destination-scoped-food",
             "distance": "route planner graph distance with straight-line fallback",
+            "scope": "destination-linked or nearby restaurants" if destination is not None else "all restaurants",
             "ranking": "Top-K heap by route distance",
             "returned": str(len(items)),
         },
@@ -159,6 +185,7 @@ def serialize_restaurant(restaurant: Restaurant) -> dict[str, Any]:
     cuisines = sorted({food.cuisine for food in restaurant.foods})
     return {
         "id": restaurant.id,
+        "destination_id": restaurant.destination_id,
         "name": restaurant.name,
         "lng": restaurant.lng,
         "lat": restaurant.lat,
@@ -172,6 +199,7 @@ def serialize_food(food: Food) -> dict[str, Any]:
     return {
         "id": food.id,
         "restaurant_id": food.restaurant_id,
+        "restaurant_destination_id": food.restaurant.destination_id,
         "restaurant_name": food.restaurant.name,
         "restaurant_lng": food.restaurant.lng,
         "restaurant_lat": food.restaurant.lat,
@@ -208,13 +236,36 @@ def _load_cuisines(session: Session) -> list[str]:
     return sorted({food.cuisine for food in _load_foods(session)})
 
 
-def _filter_foods(foods: list[Food], cuisine: str | None, restaurant_id: int | None) -> list[Food]:
+def _filter_restaurants_by_destination(restaurants: list[Restaurant], destination: Destination | None) -> list[Restaurant]:
+    if destination is None:
+        return restaurants
+    return [
+        restaurant
+        for restaurant in restaurants
+        if _restaurant_matches_destination(restaurant, destination)
+    ]
+
+
+def _filter_foods(
+    foods: list[Food],
+    cuisine: str | None,
+    restaurant_id: int | None,
+    destination: Destination | None,
+) -> list[Food]:
     return [
         food
         for food in foods
         if (not cuisine or food.cuisine == cuisine)
         and (restaurant_id is None or food.restaurant_id == restaurant_id)
+        and (destination is None or _restaurant_matches_destination(food.restaurant, destination))
     ]
+
+
+def _restaurant_matches_destination(restaurant: Restaurant, destination: Destination) -> bool:
+    if restaurant.destination_id == destination.id:
+        return True
+    distance = approximate_distance_meters((destination.lng, destination.lat), (restaurant.lng, restaurant.lat))
+    return distance <= DESTINATION_FOOD_SCOPE_METERS
 
 
 def _food_match_rank(food: Food, keyword: str) -> int | None:
@@ -324,7 +375,19 @@ def _route_to_restaurant(
         }
 
 
-def _resolve_current(current_lng: float | None, current_lat: float | None) -> tuple[float, float]:
+def _load_destination(session: Session, destination_id: int | None) -> Destination | None:
+    if destination_id is None:
+        return None
+    return session.get(Destination, destination_id)
+
+
+def _resolve_current(
+    current_lng: float | None,
+    current_lat: float | None,
+    destination: Destination | None,
+) -> tuple[float, float]:
+    if current_lng is None and current_lat is None and destination is not None:
+        return (destination.lng, destination.lat)
     return (
         current_lng if current_lng is not None else BUPT_SHAHE_CENTER[0],
         current_lat if current_lat is not None else BUPT_SHAHE_CENTER[1],

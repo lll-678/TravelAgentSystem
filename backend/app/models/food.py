@@ -8,6 +8,7 @@ class Restaurant(Base):
     __tablename__ = "restaurants"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    destination_id: Mapped[int | None] = mapped_column(ForeignKey("destinations.id"), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(128), index=True)
     lng: Mapped[float] = mapped_column(Float)
     lat: Mapped[float] = mapped_column(Float)

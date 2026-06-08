@@ -20,14 +20,23 @@ def test_food_list_search_recommend_and_nearby() -> None:
 
     with Session(engine) as session:
         seed_demo_data(session)
-        restaurants = list_restaurants_from_db(session, limit=10, offset=0)
-        items = list_food_items_from_db(session, cuisine="noodle", restaurant_id=None, limit=10, offset=0)
-        search = search_foods_from_db(session, q="番茄牛腩面", cuisine=None, limit=5)
-        search_hot = search_foods_from_db(session, q="饭", cuisine=None, sort="hot", limit=5)
+        restaurants = list_restaurants_from_db(session, destination_id=None, limit=10, offset=0)
+        scoped_restaurants = list_restaurants_from_db(session, destination_id=1, limit=10, offset=0)
+        items = list_food_items_from_db(
+            session,
+            cuisine="noodle",
+            restaurant_id=None,
+            destination_id=None,
+            limit=10,
+            offset=0,
+        )
+        search = search_foods_from_db(session, q="番茄牛腩面", cuisine=None, destination_id=None, limit=5)
+        search_hot = search_foods_from_db(session, q="饭", cuisine=None, destination_id=None, sort="hot", limit=5)
         search_distance = search_foods_from_db(
             session,
             q="饭",
             cuisine=None,
+            destination_id=None,
             sort="distance",
             current_lng=116.28333,
             current_lat=40.15608,
@@ -36,9 +45,10 @@ def test_food_list_search_recommend_and_nearby() -> None:
         recommend = recommend_foods_from_db(
             session=session,
             cuisine=None,
+            destination_id=1,
             user_id=1,
-            current_lng=116.28333,
-            current_lat=40.15608,
+            current_lng=None,
+            current_lat=None,
             limit=5,
         )
         nearby = nearby_foods_from_db(
@@ -46,16 +56,19 @@ def test_food_list_search_recommend_and_nearby() -> None:
             current_lng=116.28333,
             current_lat=40.15608,
             cuisine=None,
+            destination_id=1,
             radius=5000,
             limit=3,
         )
 
     assert restaurants["total"] >= 12
+    assert scoped_restaurants["total"] > 0
     assert items["total"] > 0
     assert search["total"] >= 1
     assert search_hot["items"][0]["heat"] >= search_hot["items"][-1]["heat"]
     assert search_distance["items"][0]["distance"] <= search_distance["items"][-1]["distance"]
     assert len(recommend["items"]) == 5
+    assert recommend["destination_id"] == 1
     assert recommend["items"][0]["score"] >= recommend["items"][-1]["score"]
     assert len(nearby["items"]) == 3
     assert len(nearby["items"][0]["routePath"]) >= 2

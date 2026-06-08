@@ -26,11 +26,15 @@ from app.models import (
     MapNode,
     Restaurant,
     User,
+    UserBehaviorLog,
+    UserFavorite,
     UserInterest,
     UserProfile,
+    UserRating,
 )
 from app.algorithms.route_planning import approximate_distance_meters
 from app.services.diary_service import rebuild_diary_search_index
+from app.services.user_service import hash_password
 from app.seed.sample_data import (
     BUPT_BUILDING_NAMES,
     BUPT_FACILITY_PREFIXES,
@@ -49,12 +53,14 @@ def resolve_seed_database_url() -> str:
 
 def seed_demo_data(session: Session) -> dict[str, int]:
     if session.scalar(select(User).limit(1)) is not None:
+        ensure_incremental_demo_data(session)
+        session.commit()
         return count_seeded_data(session)
 
     center_lng, center_lat = BUPT_SHAHE_CENTER
 
     users = [
-        User(username=f"user{i:02d}", email=f"user{i:02d}@example.com", password_hash="demo-hash")
+        User(username=f"user{i:02d}", email=f"user{i:02d}@example.com", password_hash=hash_password("demo123456"))
         for i in range(1, 11)
     ]
     session.add_all(users)
@@ -185,6 +191,7 @@ def seed_demo_data(session: Session) -> dict[str, int]:
 
     restaurants = [
         Restaurant(
+            destination_id=destinations[index % len(destinations)].id,
             name=BUPT_RESTAURANT_NAMES[index],
             lng=center_lng + ((index % 4) - 2) * 0.00032,
             lat=center_lat + ((index // 4) - 1) * 0.00028,
@@ -207,6 +214,44 @@ def seed_demo_data(session: Session) -> dict[str, int]:
             )
         )
     session.add_all(foods)
+    session.flush()
+
+    for index, user in enumerate(users):
+        target_destination = destinations[(index * 3) % len(destinations)]
+        target_food = foods[(index * 5) % len(foods)]
+        session.add(
+            UserFavorite(
+                user_id=user.id,
+                target_type="destination",
+                target_id=target_destination.id,
+                note="种子收藏，用于演示收藏影响推荐。",
+            )
+        )
+        session.add(
+            UserRating(
+                user_id=user.id,
+                target_type="destination",
+                target_id=target_destination.id,
+                rating=4.2 + (index % 4) * 0.2,
+            )
+        )
+        session.add(
+            UserBehaviorLog(
+                user_id=user.id,
+                target_type="destination",
+                target_id=target_destination.id,
+                action="view",
+                metadata_text="seed browse event",
+            )
+        )
+        session.add(
+            UserFavorite(
+                user_id=user.id,
+                target_type="food",
+                target_id=target_food.id,
+                note="种子美食收藏。",
+            )
+        )
 
     diaries = [
         Diary(
@@ -238,6 +283,90 @@ def seed_demo_data(session: Session) -> dict[str, int]:
 
     session.commit()
     return count_seeded_data(session)
+
+
+def ensure_incremental_demo_data(session: Session) -> None:
+    users = list(session.scalars(select(User).order_by(User.id).limit(10)).all())
+    destinations = list(session.scalars(select(Destination).order_by(Destination.id).limit(200)).all())
+    restaurants = list(session.scalars(select(Restaurant).order_by(Restaurant.id)).all())
+    foods = list(session.scalars(select(Food).order_by(Food.id)).all())
+    diaries = list(session.scalars(select(Diary).order_by(Diary.id)).all())
+    if not users or not destinations:
+        return
+
+    for restaurant in restaurants:
+        if restaurant.destination_id is None:
+            nearest = min(
+                destinations,
+                key=lambda destination: approximate_distance_meters(
+                    (restaurant.lng, restaurant.lat),
+                    (destination.lng, destination.lat),
+                ),
+            )
+            restaurant.destination_id = nearest.id
+
+    if session.scalar(select(UserFavorite).limit(1)) is None:
+        for index, user in enumerate(users):
+            destination = destinations[(index * 3) % len(destinations)]
+            session.add(
+                UserFavorite(
+                    user_id=user.id,
+                    target_type="destination",
+                    target_id=destination.id,
+                    note="增量种子收藏，用于演示收藏影响推荐。",
+                )
+            )
+            if foods:
+                food = foods[(index * 5) % len(foods)]
+                session.add(
+                    UserFavorite(
+                        user_id=user.id,
+                        target_type="food",
+                        target_id=food.id,
+                        note="增量种子美食收藏。",
+                    )
+                )
+
+    if session.scalar(select(UserRating).limit(1)) is None:
+        for index, user in enumerate(users):
+            destination = destinations[(index * 3) % len(destinations)]
+            session.add(
+                UserRating(
+                    user_id=user.id,
+                    target_type="destination",
+                    target_id=destination.id,
+                    rating=4.2 + (index % 4) * 0.2,
+                )
+            )
+
+    if session.scalar(select(UserBehaviorLog).limit(1)) is None:
+        for index, user in enumerate(users):
+            destination = destinations[(index * 3) % len(destinations)]
+            session.add(
+                UserBehaviorLog(
+                    user_id=user.id,
+                    target_type="destination",
+                    target_id=destination.id,
+                    action="view",
+                    metadata_text="incremental seed browse event",
+                )
+            )
+
+    for diary in diaries:
+        rebuild_diary_search_index(session, diary)
+
+    if diaries and session.scalar(select(DiaryMedia).limit(1)) is None:
+        session.add_all(
+            [
+                DiaryMedia(
+                    diary_id=diaries[index].id,
+                    media_type="image",
+                    url=f"/media/seed/diary-{index + 1}.jpg",
+                    caption="沙河校区游记示例图片",
+                )
+                for index in range(min(3, len(diaries)))
+            ]
+        )
 
 
 def _seed_indoor_navigation(session: Session) -> None:
@@ -304,6 +433,9 @@ def _seed_indoor_navigation(session: Session) -> None:
 def count_seeded_data(session: Session) -> dict[str, int]:
     models = {
         "users": User,
+        "user_favorites": UserFavorite,
+        "user_ratings": UserRating,
+        "user_behavior_logs": UserBehaviorLog,
         "destinations": Destination,
         "map_nodes": MapNode,
         "map_edges": MapEdge,

@@ -128,6 +128,7 @@ export interface DestinationItem {
   popularity: number;
   tags: string[];
   score?: number;
+  behavior_score?: number;
   reason?: string;
 }
 
@@ -148,6 +149,32 @@ export interface RecommendationPayload {
   algorithm_trace: Record<string, string>;
 }
 
+export interface UserTargetRef {
+  id: number;
+  user_id: number;
+  target_type: string;
+  target_id: number;
+  target_name?: string | null;
+}
+
+export interface UserFavoriteItem extends UserTargetRef {
+  note?: string | null;
+  created_at: string;
+}
+
+export interface UserRatingItem extends UserTargetRef {
+  rating: number;
+  aggregate_rating?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserBehaviorItem extends UserTargetRef {
+  action: string;
+  metadata_text?: string | null;
+  created_at: string;
+}
+
 export interface UserProfileItem {
   id: number;
   username: string;
@@ -155,6 +182,9 @@ export interface UserProfileItem {
   nickname: string;
   avatar_url: string | null;
   interests: string[];
+  favorites?: UserFavoriteItem[];
+  ratings?: UserRatingItem[];
+  recent_behaviors?: UserBehaviorItem[];
 }
 
 export interface UserListPayload {
@@ -166,6 +196,14 @@ export interface UserListPayload {
 
 export interface UserProfilePayload extends UserProfileItem {
   available_interests: string[];
+  algorithm_trace: Record<string, string>;
+}
+
+export interface AuthPayload {
+  access_token: string;
+  token_type: string;
+  expires_in_minutes: number;
+  user: UserProfileItem;
   algorithm_trace: Record<string, string>;
 }
 
@@ -241,6 +279,7 @@ export interface DiaryCompressionPayload {
 
 export interface RestaurantItem {
   id: number;
+  destination_id?: number | null;
   name: string;
   lng: number;
   lat: number;
@@ -252,6 +291,7 @@ export interface RestaurantItem {
 export interface FoodItem {
   id: number;
   restaurant_id: number;
+  restaurant_destination_id?: number | null;
   restaurant_name: string;
   restaurant_lng: number;
   restaurant_lat: number;
@@ -272,6 +312,7 @@ export interface FoodItem {
 export interface RestaurantListPayload {
   items: RestaurantItem[];
   total: number;
+  destination_id?: number | null;
   limit: number;
   offset: number;
   algorithm_trace?: Record<string, string>;
@@ -285,6 +326,7 @@ export interface FoodListPayload {
   cuisines?: string[];
   keyword?: string;
   cuisine?: string | null;
+  destination_id?: number | null;
   radius?: number;
   algorithm_trace?: Record<string, string>;
 }
@@ -313,6 +355,18 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000
 export async function apiGet<T>(path: string): Promise<T> {
   try {
     const response = await fetch(`${API_BASE_URL}${path}`);
+    return await parseResponse<T>(response);
+  } catch (error) {
+    notifyApiError(error);
+    throw error;
+  }
+}
+
+export async function apiGetWithAuth<T>(path: string, token: string): Promise<T> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return await parseResponse<T>(response);
   } catch (error) {
     notifyApiError(error);

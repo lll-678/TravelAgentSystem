@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     api_database_url: str = Field(default="sqlite:///./smart_tour_dev.db", alias="API_DATABASE_URL")
     dev_database_url: str = Field(default="sqlite:///./smart_tour_dev.db", alias="DEV_DATABASE_URL")
     redis_url: str = Field(default="redis://redis:6379/0", alias="REDIS_URL")
+    secret_key: str = Field(default="change-me-in-local-env", alias="SECRET_KEY")
+    access_token_expire_minutes: int = Field(default=1440, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     osm_default_place: str = Field(
         default="Beijing University of Posts and Telecommunications Shahe Campus, Beijing, China",
         alias="OSM_DEFAULT_PLACE",

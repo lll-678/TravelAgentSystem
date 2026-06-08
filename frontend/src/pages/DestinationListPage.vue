@@ -33,6 +33,12 @@
           <div class="stat"><span>热度</span><strong>{{ selected.popularity }}</strong></div>
           <p class="destination-description">{{ selected.description }}</p>
           <el-tag v-for="tag in selected.tags" :key="tag" class="tag-item">{{ tag }}</el-tag>
+          <el-divider />
+          <el-rate v-model="ratingValue" allow-half />
+          <div class="button-row">
+            <el-button size="small" @click="favoriteSelected">收藏</el-button>
+            <el-button size="small" type="primary" @click="rateSelected">评分</el-button>
+          </div>
         </el-card>
       </el-col>
 
@@ -57,8 +63,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { ElMessage } from "element-plus";
 
-import { apiGet, type DestinationItem, type DestinationListPayload } from "../services/api";
+import { apiGet, apiPost, type DestinationItem, type DestinationListPayload } from "../services/api";
 
 const loading = ref(false);
 const keyword = ref("");
@@ -67,6 +74,8 @@ const sort = ref("popularity");
 const destinations = ref<DestinationItem[]>([]);
 const categories = ref<string[]>([]);
 const selected = ref<DestinationItem | null>(null);
+const ratingValue = ref(5);
+const demoUserId = 1;
 
 const sortOptions = [
   { label: "热度", value: "popularity" },
@@ -93,6 +102,7 @@ async function loadDestinations() {
     destinations.value = payload.items;
     categories.value = payload.categories;
     selected.value = payload.items[0] ?? null;
+    ratingValue.value = selected.value?.rating ?? 5;
   } finally {
     loading.value = false;
   }
@@ -100,6 +110,38 @@ async function loadDestinations() {
 
 function selectDestination(row: DestinationItem) {
   selected.value = row;
+  ratingValue.value = row.rating;
+  void recordDestinationView(row.id);
+}
+
+async function favoriteSelected() {
+  if (!selected.value) return;
+  await apiPost(`/api/v1/users/${demoUserId}/favorites`, {
+    target_type: "destination",
+    target_id: selected.value.id,
+    note: "目的地页收藏",
+  });
+  ElMessage.success("已收藏，推荐会读取该行为");
+}
+
+async function rateSelected() {
+  if (!selected.value) return;
+  await apiPost(`/api/v1/users/${demoUserId}/ratings`, {
+    target_type: "destination",
+    target_id: selected.value.id,
+    rating: ratingValue.value,
+  });
+  await loadDestinations();
+  ElMessage.success("评分已更新");
+}
+
+async function recordDestinationView(destinationId: number) {
+  await apiPost(`/api/v1/users/${demoUserId}/behavior`, {
+    target_type: "destination",
+    target_id: destinationId,
+    action: "view",
+    metadata_text: "destination row click",
+  });
 }
 
 onMounted(() => {
@@ -115,5 +157,11 @@ onMounted(() => {
 
 .tag-item {
   margin: 0 6px 6px 0;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
 }
 </style>

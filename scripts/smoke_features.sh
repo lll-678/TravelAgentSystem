@@ -159,6 +159,7 @@ with Session(engine) as session:
     foods = recommend_foods_from_db(
         session=session,
         cuisine=None,
+        destination_id=1,
         user_id=1,
         current_lng=116.28333,
         current_lat=40.15608,
@@ -171,6 +172,7 @@ with Session(engine) as session:
         session=session,
         q="饭",
         cuisine=None,
+        destination_id=1,
         sort="distance",
         current_lng=116.28333,
         current_lat=40.15608,
@@ -187,6 +189,7 @@ with Session(engine) as session:
         current_lng=116.28333,
         current_lat=40.15608,
         cuisine=None,
+        destination_id=1,
         radius=5000,
         limit=3,
     )

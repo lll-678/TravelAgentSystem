@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.db.init_db import create_all
+from app.db.session import create_app_engine
 
 
 def create_app() -> FastAPI:
@@ -22,6 +24,11 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix="/api/v1")
+
+    @app.on_event("startup")
+    def ensure_database_schema() -> None:
+        engine = create_app_engine(settings.api_database_url)
+        create_all(engine)
 
     @app.get("/")
     def root() -> dict[str, str]:

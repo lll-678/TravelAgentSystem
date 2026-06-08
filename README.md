@@ -2,7 +2,7 @@
 
 大型校园 / 景区智能导览平台 MVP。
 
-当前仓库处于 **Stage 22 diary media and search** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、室内导航、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、校园地图演示 seed、拥挤度/交通方式路线策略、室内跨楼层导航、用户兴趣编辑、设施/美食查询打磨、高德 Web Service 真实 POI 导入链路、设施数据清洗、路线地点选择输入、高德真实步行路线兜底，以及游记媒体/索引检索/兴趣推荐。
+当前仓库处于 **Stage 24 destination-scoped food** 阶段：已建立 FastAPI / Vue / AMap / Docker Compose 骨架，加入 SQLAlchemy 核心表模型、确定性 seed/reset 数据，并把地图浏览、路线规划、室内导航、附近设施、目的地搜索、推荐、OSM 导入、游记社区、美食推荐、AIGC 占位和后台数据看板接入数据库数据。近期阶段补齐了高德坐标漂移修正、校园地图演示 seed、拥挤度/交通方式路线策略、室内跨楼层导航、用户兴趣编辑、设施/美食查询打磨、高德 Web Service 真实 POI 导入链路、设施数据清洗、路线地点选择输入、高德真实步行路线兜底、游记媒体/索引检索/兴趣推荐、用户注册登录/收藏评分/行为日志闭环，以及按目的地范围过滤的美食推荐。
 
 ## Target Stack
 
@@ -104,7 +104,9 @@ bash scripts/reset_dev_db.sh
 bash scripts/smoke_features.sh
 ```
 
-These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 10 users, 200 destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 19 indoor nodes, 20 indoor edges, 12 restaurants, 72 foods, and 20 diaries.
+These scripts default to `DEV_DATABASE_URL=sqlite:///./smart_tour_dev.db` and currently seed 10 users, 200 destinations, 180 map nodes, 641 map edges, 60 buildings, 120 facilities, 10 facility categories, 19 indoor nodes, 20 indoor edges, 12 restaurants, 72 foods, 20 diaries, and sample user feedback rows.
+
+`bash scripts/seed_all.sh` is incremental once a dev DB already exists: it creates missing tables/columns, assigns existing restaurants to nearby destinations, and backfills sample favorites/ratings/behavior logs without deleting real imported AMap facilities.
 
 The deterministic seed is an offline demo fallback, not a claim of real campus POI density. To enrich facilities from real AMap POI data after seeding:
 
@@ -152,6 +154,19 @@ curl 'http://127.0.0.1:8000/api/v1/facilities/nearby?current_lng=116.28333&curre
 curl 'http://127.0.0.1:8000/api/v1/destinations?category=campus&q=导览点&limit=5'
 curl 'http://127.0.0.1:8000/api/v1/search/places?keyword=厕所&limit=5'
 curl 'http://127.0.0.1:8000/api/v1/recommendations?user_id=1&strategy=composite&limit=10'
+curl -X POST http://127.0.0.1:8000/api/v1/users/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username_or_email":"user01","password":"demo123456"}'
+curl -X POST http://127.0.0.1:8000/api/v1/users/1/favorites \
+  -H 'Content-Type: application/json' \
+  -d '{"target_type":"destination","target_id":120,"note":"demo favorite"}'
+curl -X POST http://127.0.0.1:8000/api/v1/users/1/ratings \
+  -H 'Content-Type: application/json' \
+  -d '{"target_type":"destination","target_id":120,"rating":5}'
+curl -X POST http://127.0.0.1:8000/api/v1/users/1/behavior \
+  -H 'Content-Type: application/json' \
+  -d '{"target_type":"destination","target_id":120,"action":"view","metadata_text":"demo browse"}'
+curl 'http://127.0.0.1:8000/api/v1/recommendations?user_id=1&strategy=behavior&limit=10'
 curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
   -d '{"source":"fixture","reset_existing":true}'
@@ -159,7 +174,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/admin/map/import \
   -H 'Content-Type: application/json' \
   -d '{"source":"amap_poi","dist":1800,"max_pages":3,"request_interval":0.5,"reset_existing":false}'
 curl 'http://127.0.0.1:8000/api/v1/diaries?limit=5'
-curl 'http://127.0.0.1:8000/api/v1/foods/recommend?limit=5'
+curl 'http://127.0.0.1:8000/api/v1/foods/recommend?destination_id=1&limit=5'
 curl -X POST http://127.0.0.1:8000/api/v1/aigc/diary-draft \
   -H 'Content-Type: application/json' \
   -d '{"topic":"沙河校区路线","keywords":["食堂","图书馆"],"tone":"自然"}'
@@ -216,6 +231,8 @@ python backend/scripts/smoke_amap_route.py
 - `docs/stage_20_data_cleaning_route_inputs.md`: data cleaning and route place-input notes.
 - `docs/stage_21_real_route_planning.md`: AMap walking route and local Dijkstra fallback notes.
 - `docs/stage_22_diary_media_search.md`: diary media, exact title index, inverted index, and interest recommendation notes.
+- `docs/stage_23_user_feedback_loop.md`: registration/login, token auth, favorites, ratings, behavior logs, and recommendation feedback notes.
+- `docs/stage_24_destination_food_scope.md`: restaurant destination linkage and scoped food API notes.
 - `README_DEPLOY.md`: local and Docker deployment commands.
 - `tests/fixtures/README.md`: shared test fixture notes.
 

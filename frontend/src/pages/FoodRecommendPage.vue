@@ -15,6 +15,16 @@
             <el-form-item label="关键词">
               <el-input v-model="keyword" clearable placeholder="菜名、菜系、餐厅" @keyup.enter="searchFoods" />
             </el-form-item>
+            <el-form-item label="目的地范围">
+              <el-select v-model="selectedDestinationId" clearable placeholder="全部目的地" @change="reloadScopedFood">
+                <el-option
+                  v-for="item in destinationOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item label="菜系">
               <el-select v-model="cuisine" clearable placeholder="全部菜系">
                 <el-option v-for="item in cuisineOptions" :key="item" :label="item" :value="item" />
@@ -78,6 +88,8 @@ import AMapView from "../components/AMapView.vue";
 import {
   apiGet,
   type Coordinate,
+  type DestinationItem,
+  type DestinationListPayload,
   type FacilityItem,
   type FoodItem,
   type FoodListPayload,
@@ -94,6 +106,8 @@ const restaurants = ref<RestaurantItem[]>([]);
 const foods = ref<FoodItem[]>([]);
 const cuisines = ref<string[]>([]);
 const routePath = ref<Coordinate[]>([]);
+const destinationOptions = ref<DestinationItem[]>([]);
+const selectedDestinationId = ref<number | null>(1);
 
 const cuisineOptions = computed(() => cuisines.value.length > 0 ? cuisines.value : ["home-style", "noodle", "cafe", "halal", "snack"]);
 const sortOptions = [
@@ -119,13 +133,27 @@ const foodMarkers = computed<FacilityItem[]>(() =>
 );
 
 async function loadRestaurants() {
-  const payload = await apiGet<RestaurantListPayload>("/api/v1/foods/restaurants?limit=30");
+  const params = new URLSearchParams({ limit: "30" });
+  if (selectedDestinationId.value) {
+    params.set("destination_id", String(selectedDestinationId.value));
+  }
+  const payload = await apiGet<RestaurantListPayload>(`/api/v1/foods/restaurants?${params}`);
   restaurants.value = payload.items;
 }
 
 async function loadItems() {
-  const payload = await apiGet<FoodListPayload>("/api/v1/foods/items?limit=30");
+  const params = new URLSearchParams({ limit: "30" });
+  if (selectedDestinationId.value) {
+    params.set("destination_id", String(selectedDestinationId.value));
+  }
+  const payload = await apiGet<FoodListPayload>(`/api/v1/foods/items?${params}`);
   cuisines.value = payload.cuisines ?? [];
+}
+
+async function loadDestinations() {
+  const payload = await apiGet<DestinationListPayload>("/api/v1/destinations?limit=30&sort=popularity");
+  destinationOptions.value = payload.items;
+  selectedDestinationId.value = payload.items[0]?.id ?? null;
 }
 
 async function loadRecommendations() {
@@ -179,13 +207,22 @@ function buildBaseParams() {
     current_lng: "116.28333",
     current_lat: "40.15608",
   });
+  if (selectedDestinationId.value) {
+    params.set("destination_id", String(selectedDestinationId.value));
+  }
   if (cuisine.value) {
     params.set("cuisine", cuisine.value);
   }
   return params;
 }
 
+async function reloadScopedFood() {
+  await Promise.all([loadRestaurants(), loadItems()]);
+  await loadRecommendations();
+}
+
 onMounted(async () => {
+  await loadDestinations();
   await Promise.all([loadRestaurants(), loadItems()]);
   await loadRecommendations();
 });

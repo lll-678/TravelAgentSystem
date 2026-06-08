@@ -2,18 +2,29 @@
 
 ## Scope
 
-This is the preparation document for fixing the nearby-facility workflow against requirement `(3) 场所查询`.
+This stage fixes the nearby-facility workflow against requirement `(3) 场所查询`.
 
-The current backend can rank facilities by graph distance, but the frontend still defaults to a fixed coordinate. That is not a complete "nearby" interaction. The user must first select a current place or map point.
+The backend can rank facilities by graph distance, and the frontend now lets the user select a current place or map point before querying.
+
+## Delivered
+
+- `GET /api/v1/facilities/nearby` accepts `origin_place_id`.
+- Backend resolves `building-*`, `facility-*`, and `node-*` origins.
+- Response includes `origin`, `category_query`, resolved category, route distance, route path, and trace.
+- NearbyFacilitiesPage has a campus origin selector powered by `GET /api/v1/search/places?scope=campus`.
+- AMapView supports an origin marker and emits map-click coordinates.
+- Map clicks are converted from GCJ-02 to backend WGS84 before query.
+- Coordinate origin remains available in a debug panel.
+- Smoke now verifies nearby-facility search with `origin_place_id`.
 
 ## Requirement Mapping
 
 | Requirement | Target Behavior | Current State | Gap |
 | --- | --- | --- | --- |
-| Select a scenic/campus place and find nearby facilities in a range | User chooses an origin place such as library, gate, canteen, building, facility, or map click | API has coordinate fallback; frontend uses default BUPT center | Missing explicit origin selector and map-click origin |
-| Filter by category | User chooses facility category before search | Category query exists | Page needs clearer category text input plus stable options from API/data |
-| Input category name and sort by distance | User can type `厕所/卫生间/超市/食堂`, backend resolves category and ranks by real walking distance | Backend supports alias/category contains matching | UI should expose text input and show resolved category |
-| Distance is not straight-line | Backend runs Dijkstra and Top-K over route distance | Implemented in service | Needs visible `algorithm_trace`/distance explanation in page |
+| Select a scenic/campus place and find nearby facilities in a range | User chooses an origin place such as library, gate, canteen, building, facility, or map click | Implemented | n/a |
+| Filter by category | User chooses facility category before search | Implemented | n/a |
+| Input category name and sort by distance | User can type `厕所/卫生间/超市/食堂`, backend resolves category and ranks by real walking distance | Implemented | n/a |
+| Distance is not straight-line | Backend runs Dijkstra and Top-K over route distance | Implemented | n/a |
 
 ## Product Flow
 
@@ -38,15 +49,15 @@ result table: facility name, resolved category, route distance, duration
 map: origin marker, facility markers, route polyline
 ```
 
-## API Target
+## API Contract
 
-Extend:
+Extended:
 
 ```text
 GET /api/v1/facilities/nearby
 ```
 
-New preferred parameters:
+Preferred parameters:
 
 ```text
 origin_place_id=building-33 | facility-123 | node-184
@@ -84,19 +95,19 @@ algorithm_trace.ranking
 
 - `campus_navigation`: school-internal buildings, semantic nodes, and campus POIs; used for origin selection and strict campus demo.
 - `nearby_facilities`: school-surrounding facilities; used for surrounding-service recommendation.
-- Stage 34 first fixes the interaction with the current `facilities` table. A later data-model hardening stage should add an explicit `dataset`/`scope` column if we need strict separation in queries.
+- Stage 34 fixes the interaction with the current `facilities` table. A later data-model hardening stage should add an explicit `dataset`/`scope` column if we need strict separation in queries.
 
 ## Acceptance Criteria
 
-- [ ] User can choose origin from campus place search.
-- [ ] User can set origin by clicking the map.
-- [ ] User can still use coordinate fallback from an advanced/debug panel.
-- [ ] Query sends selected origin to backend instead of silently using fixed BUPT center.
-- [ ] Backend accepts `origin_place_id` and resolves it through the same campus place model used by route planning.
-- [ ] Category can be selected or typed in Chinese.
-- [ ] Result shows resolved category, real route distance, duration, and routePath.
-- [ ] Map shows origin marker, facility markers, and selected route.
-- [ ] `algorithm_trace` explains category lookup, Dijkstra graph distance, and Top-K heap ranking.
+- [x] User can choose origin from campus place search.
+- [x] User can set origin by clicking the map.
+- [x] User can still use coordinate fallback from an advanced/debug panel.
+- [x] Query sends selected origin to backend instead of silently using fixed BUPT center.
+- [x] Backend accepts `origin_place_id` and resolves it through the same campus place model used by route planning.
+- [x] Category can be selected or typed in Chinese.
+- [x] Result shows resolved category, real route distance, duration, and routePath.
+- [x] Map shows origin marker, facility markers, and selected route.
+- [x] `algorithm_trace` explains category lookup, Dijkstra graph distance, and Top-K heap ranking.
 
 ## Planned Validation
 

@@ -13,7 +13,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import type { BuildingItem, Coordinate, FacilityItem } from "../services/api";
 import { loadAMap } from "../utils/amap";
-import { pathToGcj02, pathsToGcj02, wgs84ToGcj02 } from "../utils/coordinates";
+import { gcj02ToWgs84, pathToGcj02, pathsToGcj02, wgs84ToGcj02 } from "../utils/coordinates";
 
 const props = withDefaults(
   defineProps<{
@@ -21,14 +21,19 @@ const props = withDefaults(
     buildings?: BuildingItem[];
     roadPaths?: Coordinate[][];
     routePath?: Coordinate[];
+    origin?: { lng: number; lat: number; name?: string } | null;
   }>(),
   {
     facilities: () => [],
     buildings: () => [],
     roadPaths: () => [],
     routePath: () => [],
+    origin: null,
   },
 );
+const emit = defineEmits<{
+  (event: "map-click", coordinate: Coordinate): void;
+}>();
 
 const mapElement = ref<HTMLElement | null>(null);
 const loadError = ref("");
@@ -93,6 +98,18 @@ function drawOverlays() {
     overlays.push(marker);
   });
 
+  if (props.origin) {
+    const originPosition = wgs84ToGcj02([props.origin.lng, props.origin.lat]);
+    const originMarker = new AMap.Marker({
+      position: originPosition,
+      title: props.origin.name || "当前位置",
+      content: `<div class="origin-dot"></div>`,
+      offset: new AMap.Pixel(-8, -8),
+      zIndex: 120,
+    });
+    overlays.push(originMarker);
+  }
+
   let routePolyline: any = null;
   if (props.routePath.length >= 2) {
     routePolyline = new AMap.Polyline({
@@ -127,6 +144,10 @@ onMounted(async () => {
     });
     map.addControl(new AMap.Scale());
     map.addControl(new AMap.ToolBar({ position: "RB" }));
+    map.on("click", (event: any) => {
+      const lngLat = event.lnglat;
+      emit("map-click", gcj02ToWgs84([lngLat.getLng(), lngLat.getLat()]));
+    });
     drawOverlays();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : "AMap failed to load";
@@ -141,7 +162,7 @@ onBeforeUnmount(() => {
 });
 
 watch(
-  () => [props.facilities, props.buildings, props.roadPaths, props.routePath],
+  () => [props.facilities, props.buildings, props.roadPaths, props.routePath, props.origin],
   () => drawOverlays(),
   { deep: true },
 );
@@ -185,5 +206,14 @@ watch(
   border-radius: 50%;
   background: #0f766e;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.28);
+}
+
+:global(.origin-dot) {
+  width: 16px;
+  height: 16px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #dc2626;
+  box-shadow: 0 2px 8px rgba(127, 29, 29, 0.35);
 }
 </style>

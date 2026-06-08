@@ -116,7 +116,9 @@ export interface IndoorRoutePayload {
 export interface NearbyFacilitiesPayload {
   items: FacilityItem[];
   total: number;
+  origin?: RouteEndpointItem;
   category: string | null;
+  category_query?: string | null;
   radius: number;
   algorithm_trace?: Record<string, string>;
 }

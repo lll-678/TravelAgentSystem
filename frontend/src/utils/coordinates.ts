@@ -18,6 +18,14 @@ export function wgs84ToGcj02([lng, lat]: Coordinate): Coordinate {
   return [roundCoordinate(lng + dLng), roundCoordinate(lat + dLat)];
 }
 
+export function gcj02ToWgs84([lng, lat]: Coordinate): Coordinate {
+  if (isOutsideChina(lng, lat)) {
+    return [lng, lat];
+  }
+  const [gcjLng, gcjLat] = wgs84ToGcj02([lng, lat]);
+  return [roundCoordinate(lng * 2 - gcjLng), roundCoordinate(lat * 2 - gcjLat)];
+}
+
 export function pathToGcj02(path: Coordinate[]): Coordinate[] {
   return path.map(wgs84ToGcj02);
 }

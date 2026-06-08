@@ -50,6 +50,9 @@ with Session(engine) as session:
     search = search_places_from_db(session, "图书馆", None, 3)
     require("place search results", search["total"])
     print(f"[smoke] search: total={search['total']} returned={len(search['items'])}")
+    origin_search = search_places_from_db(session, "图书馆", None, 1, scope="campus")
+    require("nearby origin search", origin_search["total"])
+    nearby_origin = origin_search["items"][0]
 
     recommendations = recommend_destinations_from_db(
         session=session,
@@ -143,8 +146,9 @@ with Session(engine) as session:
 
     facilities = get_nearby_facilities_from_db(
         session=session,
-        current_lng=116.28333,
-        current_lat=40.15608,
+        origin_place_id=nearby_origin["id"],
+        current_lng=0,
+        current_lat=0,
         category="超市",
         radius=5000,
         limit=3,
@@ -152,7 +156,8 @@ with Session(engine) as session:
     require("nearby facilities", len(facilities["items"]))
     print(
         "[smoke] facilities: "
-        f"category={facilities['category']} total={facilities['total']} returned={len(facilities['items'])}"
+        f"origin={facilities['origin']['name']} category={facilities['category']} "
+        f"total={facilities['total']} returned={len(facilities['items'])}"
     )
 
     diaries = list_diaries_from_db(session, destination_id=None, q=None, sort="hot", limit=2, offset=0)

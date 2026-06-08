@@ -13,7 +13,7 @@ from app.algorithms.route_planning import (
     build_bidirectional_graph,
     dijkstra_shortest_path,
 )
-from app.models import Facility, FacilityCategory, MapEdge, MapNode
+from app.models import Building, Facility, FacilityCategory, MapEdge, MapNode
 from app.services.route_service import build_path_coordinates
 
 
@@ -24,12 +24,14 @@ def get_nearby_facilities_from_db(
     category: str | None,
     radius: int,
     limit: int,
+    origin_place_id: str | None = None,
 ) -> dict[str, Any]:
     nodes, edges = _load_graph_data(session)
     if not edges:
         raise RouteNotFoundError("No map edges are available.")
 
-    start = (current_lng, current_lat)
+    origin = _resolve_origin(session, origin_place_id, current_lng, current_lat)
+    start = (origin["lng"], origin["lat"])
     graph = build_bidirectional_graph(edges)
     components = _connected_components(nodes, edges)
 
@@ -73,11 +75,15 @@ def get_nearby_facilities_from_db(
     return {
         "items": ranked,
         "total": len(enriched),
+        "origin": origin,
         "category": resolved_category,
         "category_query": category,
         "radius": radius,
         "algorithm_trace": {
             "stage": "stage-5-facility-graph-distance",
+            "origin_resolution": "origin_place_id" if origin_place_id else "coordinate fallback",
+            "origin_id": origin.get("id") or "",
+            "origin_source": origin.get("source") or "",
             "filter": "facility category before routing",
             "category_lookup": "code/name/contains matching",
             "resolved_category": resolved_category or "",
@@ -121,6 +127,80 @@ def _load_facilities(session: Session, category: str | None) -> list[Facility]:
     if category:
         query = query.join(FacilityCategory).where(FacilityCategory.code == category)
     return list(session.scalars(query).all())
+
+
+def _resolve_origin(
+    session: Session,
+    origin_place_id: str | None,
+    current_lng: float,
+    current_lat: float,
+) -> dict[str, Any]:
+    if origin_place_id:
+        return _lookup_place_coordinate(session, origin_place_id)
+    return {
+        "id": "",
+        "source": "coordinate",
+        "name": "当前位置",
+        "lng": float(current_lng),
+        "lat": float(current_lat),
+    }
+
+
+def _lookup_place_coordinate(session: Session, place_id: str) -> dict[str, Any]:
+    source, raw_id = _split_place_id(place_id)
+    model_id = int(raw_id)
+    if source == "facility":
+        facility = session.get(Facility, model_id)
+        if facility is None:
+            raise RouteNotFoundError(f"Facility {place_id} was not found.")
+        return {
+            "id": place_id,
+            "source": "facility",
+            "name": facility.name,
+            "lng": facility.lng,
+            "lat": facility.lat,
+        }
+    if source == "building":
+        building = session.get(Building, model_id)
+        if building is None:
+            raise RouteNotFoundError(f"Building {place_id} was not found.")
+        lng, lat = _building_center(building.polygon)
+        return {
+            "id": place_id,
+            "source": "building",
+            "name": building.name,
+            "lng": lng,
+            "lat": lat,
+        }
+    if source == "node":
+        node = session.get(MapNode, model_id)
+        if node is None:
+            raise RouteNotFoundError(f"Map node {place_id} was not found.")
+        return {
+            "id": place_id,
+            "source": "node",
+            "name": node.name or f"校内点 {node.id}",
+            "lng": node.lng,
+            "lat": node.lat,
+        }
+    raise RouteNotFoundError(f"Unsupported nearby origin place id: {place_id}.")
+
+
+def _split_place_id(place_id: str) -> tuple[str, str]:
+    if "-" not in place_id:
+        raise RouteNotFoundError(f"Invalid nearby origin place id: {place_id}.")
+    source, raw_id = place_id.split("-", maxsplit=1)
+    if not raw_id.isdigit():
+        raise RouteNotFoundError(f"Invalid nearby origin place id: {place_id}.")
+    return source, raw_id
+
+
+def _building_center(polygon: list[list[float]]) -> tuple[float, float]:
+    if not polygon:
+        raise RouteNotFoundError("Building polygon is empty.")
+    lng = sum(point[0] for point in polygon) / len(polygon)
+    lat = sum(point[1] for point in polygon) / len(polygon)
+    return lng, lat
 
 
 def _resolve_category_code(session: Session, category: str | None) -> str | None:

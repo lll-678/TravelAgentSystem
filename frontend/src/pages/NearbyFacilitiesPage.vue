@@ -3,33 +3,72 @@
     <div class="page-heading">
       <div>
         <h1>附近设施</h1>
-        <p>按类别和道路图距离查询附近设施。</p>
+        <p>以选中的校内场所为中心，按真实道路距离查询服务设施。</p>
       </div>
       <el-button type="primary" :loading="loading" @click="loadFacilities">查询</el-button>
     </div>
+
+    <el-alert v-if="error" :title="error" type="error" show-icon />
 
     <el-row :gutter="16">
       <el-col :span="7">
         <el-card shadow="never">
           <el-form label-position="top">
+            <el-form-item label="当前位置">
+              <el-select
+                v-model="originPlaceId"
+                filterable
+                remote
+                clearable
+                reserve-keyword
+                :remote-method="searchOrigins"
+                :loading="originLoading"
+                placeholder="搜索校内场所"
+                @change="handleOriginChange"
+              >
+                <el-option
+                  v-for="option in originOptions"
+                  :key="option.id"
+                  :label="placeLabel(option)"
+                  :value="option.id"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item label="设施类别">
               <el-select v-model="category" clearable filterable allow-create placeholder="全部类别">
-                <el-option label="厕所" value="toilet" />
-                <el-option label="饮水点" value="water" />
-                <el-option label="便利店" value="shop" />
-                <el-option label="食堂" value="canteen" />
-                <el-option label="校门" value="gate" />
-                <el-option label="图书馆服务" value="library" />
-                <el-option label="运动设施" value="sport" />
-                <el-option label="医务室" value="clinic" />
-                <el-option label="交通站点" value="transport" />
+                <el-option label="厕所" value="厕所" />
+                <el-option label="饮水点" value="饮水点" />
+                <el-option label="便利店" value="超市" />
+                <el-option label="食堂" value="食堂" />
+                <el-option label="校门" value="校门" />
+                <el-option label="图书馆服务" value="图书馆" />
+                <el-option label="运动设施" value="运动" />
+                <el-option label="医务室" value="医务室" />
+                <el-option label="交通站点" value="交通" />
                 <el-option label="ATM" value="atm" />
               </el-select>
             </el-form-item>
             <el-form-item label="搜索半径">
               <el-input-number v-model="radius" :min="100" :max="3000" :step="100" />
             </el-form-item>
+            <el-collapse class="advanced-panel">
+              <el-collapse-item title="调试坐标" name="coordinates">
+                <el-form-item label="当前位置经度">
+                  <el-input-number v-model="coordinateOrigin.lng" :precision="6" :step="0.0001" />
+                </el-form-item>
+                <el-form-item label="当前位置纬度">
+                  <el-input-number v-model="coordinateOrigin.lat" :precision="6" :step="0.0001" />
+                </el-form-item>
+                <el-button @click="applyCoordinateOrigin">使用坐标</el-button>
+              </el-collapse-item>
+            </el-collapse>
           </el-form>
+        </el-card>
+
+        <el-card shadow="never" class="result-card">
+          <div class="stat"><span>当前位置</span><strong>{{ selectedOrigin.name }}</strong></div>
+          <div class="stat"><span>类别</span><strong>{{ resolvedCategory }}</strong></div>
+          <div class="stat"><span>结果</span><strong>{{ facilities.length }}</strong></div>
         </el-card>
 
         <el-card shadow="never" class="result-card">
@@ -49,23 +88,144 @@
       </el-col>
 
       <el-col :span="17">
-        <AMapView :facilities="facilities" :route-path="routePath" />
+        <AMapView
+          :facilities="facilities"
+          :road-paths="roadPaths"
+          :buildings="mapPayload?.buildings ?? []"
+          :route-path="routePath"
+          :origin="selectedOrigin"
+          @map-click="handleMapClick"
+        />
       </el-col>
     </el-row>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 
 import AMapView from "../components/AMapView.vue";
-import { apiGet, type Coordinate, type FacilityItem, type NearbyFacilitiesPayload } from "../services/api";
+import {
+  apiGet,
+  type Coordinate,
+  type FacilityItem,
+  type MapGeoJsonPayload,
+  type NearbyFacilitiesPayload,
+  type RouteEndpointItem,
+  type SearchPlaceItem,
+  type SearchPlacesPayload,
+} from "../services/api";
 
-const category = ref("");
+const category = ref("超市");
 const radius = ref(1000);
 const loading = ref(false);
+const originLoading = ref(false);
+const error = ref("");
 const facilities = ref<FacilityItem[]>([]);
 const routePath = ref<Coordinate[]>([]);
+const mapPayload = ref<MapGeoJsonPayload | null>(null);
+const originPlaceId = ref("");
+const originOptions = ref<SearchPlaceItem[]>([]);
+const originCache = reactive<Record<string, SearchPlaceItem>>({});
+const coordinateOrigin = reactive({
+  lng: 116.28333,
+  lat: 40.15608,
+});
+const selectedOrigin = ref<RouteEndpointItem>({
+  id: "",
+  source: "coordinate",
+  name: "北京邮电大学沙河校区",
+  lng: coordinateOrigin.lng,
+  lat: coordinateOrigin.lat,
+});
+
+const roadPaths = computed(() => mapPayload.value?.roads.map((road) => road.path) ?? []);
+const resolvedCategory = computed(() => facilities.value[0]?.category_name ?? (category.value || "全部"));
+
+async function searchOrigins(query: string) {
+  originLoading.value = true;
+  try {
+    const keyword = query.trim();
+    const params = new URLSearchParams({ keyword, limit: keyword ? "30" : "100", scope: "campus" });
+    const payload = await apiGet<SearchPlacesPayload>(`/api/v1/search/places?${params}`);
+    mergeOriginOptions(payload.items.filter(isCampusOrigin));
+    error.value = "";
+  } catch (requestError) {
+    error.value = requestError instanceof Error ? requestError.message : "当前位置搜索失败";
+  } finally {
+    originLoading.value = false;
+  }
+}
+
+function mergeOriginOptions(items: SearchPlaceItem[]) {
+  const byId = new Map(originOptions.value.map((item) => [item.id, item]));
+  for (const item of items) {
+    originCache[item.id] = item;
+    byId.set(item.id, item);
+  }
+  originOptions.value = Array.from(byId.values()).slice(0, 100);
+}
+
+function isCampusOrigin(item: SearchPlaceItem) {
+  return item.source === "building" || item.source === "facility" || item.source === "node";
+}
+
+function placeLabel(item: SearchPlaceItem) {
+  const source =
+    {
+      building: "楼宇",
+      facility: "设施",
+      node: "校内点",
+    }[item.source] ?? item.source;
+  return `${item.name} · ${source}`;
+}
+
+function handleOriginChange(placeId: string) {
+  const item = originCache[placeId];
+  if (!item) {
+    return;
+  }
+  setOriginFromPlace(item);
+  void loadFacilities();
+}
+
+function setOriginFromPlace(item: SearchPlaceItem) {
+  selectedOrigin.value = {
+    id: item.id,
+    source: item.source,
+    name: item.name,
+    lng: item.lng,
+    lat: item.lat,
+  };
+  coordinateOrigin.lng = item.lng;
+  coordinateOrigin.lat = item.lat;
+}
+
+function handleMapClick(coordinate: Coordinate) {
+  originPlaceId.value = "";
+  coordinateOrigin.lng = coordinate[0];
+  coordinateOrigin.lat = coordinate[1];
+  selectedOrigin.value = {
+    id: "",
+    source: "coordinate",
+    name: "地图选点",
+    lng: coordinate[0],
+    lat: coordinate[1],
+  };
+  void loadFacilities();
+}
+
+function applyCoordinateOrigin() {
+  originPlaceId.value = "";
+  selectedOrigin.value = {
+    id: "",
+    source: "coordinate",
+    name: "调试坐标",
+    lng: coordinateOrigin.lng,
+    lat: coordinateOrigin.lat,
+  };
+  void loadFacilities();
+}
 
 async function loadFacilities() {
   loading.value = true;
@@ -74,18 +234,58 @@ async function loadFacilities() {
       radius: String(radius.value),
       limit: "10",
     });
+    if (originPlaceId.value) {
+      params.set("origin_place_id", originPlaceId.value);
+    } else {
+      params.set("current_lng", String(selectedOrigin.value.lng));
+      params.set("current_lat", String(selectedOrigin.value.lat));
+    }
     if (category.value) {
       params.set("category", category.value);
     }
     const payload = await apiGet<NearbyFacilitiesPayload>(`/api/v1/facilities/nearby?${params}`);
     facilities.value = payload.items;
     routePath.value = payload.items[0]?.routePath ?? [];
+    if (payload.origin) {
+      selectedOrigin.value = payload.origin;
+      coordinateOrigin.lng = payload.origin.lng;
+      coordinateOrigin.lat = payload.origin.lat;
+    }
+    error.value = "";
+  } catch (requestError) {
+    error.value = requestError instanceof Error ? requestError.message : "附近设施查询失败";
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(() => {
-  void loadFacilities();
+async function loadMap() {
+  mapPayload.value = await apiGet<MapGeoJsonPayload>("/api/v1/map/geojson");
+}
+
+async function primeOrigin() {
+  await searchOrigins("图书馆");
+  const library = originOptions.value.find((item) => item.name.includes("图书馆")) ?? originOptions.value[0];
+  if (library) {
+    originPlaceId.value = library.id;
+    setOriginFromPlace(library);
+  }
+}
+
+onMounted(async () => {
+  try {
+    await loadMap();
+    await searchOrigins("");
+    await primeOrigin();
+    await loadFacilities();
+  } catch (requestError) {
+    error.value = requestError instanceof Error ? requestError.message : "附近设施初始化失败";
+  }
 });
 </script>
+
+<style scoped>
+.advanced-panel {
+  margin: 4px 0 14px;
+}
+</style>

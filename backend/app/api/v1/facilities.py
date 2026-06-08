@@ -10,6 +10,7 @@ router = APIRouter()
 
 @router.get("/nearby")
 def nearby_facilities(
+    origin_place_id: str | None = Query(default=None),
     current_lng: float = Query(default=116.28333),
     current_lat: float = Query(default=40.15608),
     category: str | None = Query(default=None),
@@ -20,6 +21,7 @@ def nearby_facilities(
     try:
         return get_nearby_facilities_from_db(
             session=db,
+            origin_place_id=origin_place_id,
             current_lng=current_lng,
             current_lat=current_lat,
             category=category,

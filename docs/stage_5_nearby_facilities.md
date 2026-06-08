@@ -26,7 +26,7 @@ Request:
 GET /api/v1/facilities/nearby?current_lng=116.28333&current_lat=40.15608&category=water&radius=5000&limit=3
 ```
 
-Stage 34 target request:
+Stage 34 preferred request:
 
 ```text
 GET /api/v1/facilities/nearby?origin_place_id=node-184&category=超市&radius=800&limit=10
@@ -62,18 +62,14 @@ Expected backend result:
 
 ## Known Gaps
 
-- The page still defaults to a fixed coordinate when the user has not selected an origin.
-- The API accepts coordinate fallback but does not yet accept `origin_place_id`.
-- Map click does not yet set the nearby-facility origin.
 - Facility route distance runs Dijkstra per candidate; this is acceptable for the current seed scale.
 - Direct click-to-route planner navigation is still frontend polish, though routePath drawing is available.
 - Dataset separation between `campus_navigation` and `nearby_facilities` is documented, but the current `facilities` table does not yet enforce it with a first-class column.
 
 ## Next Stage
 
-Stage 34 should complete the origin-selection workflow:
+Future hardening:
 
-- origin search with `scope=campus`
-- optional map-click origin
-- backend `origin_place_id` resolution
-- visible origin marker and route drawing
+- add first-class `dataset`/`scope` field to facilities
+- link result row action directly into RoutePlannerPage
+- optimize repeated Dijkstra calls with precomputed/cached nearest-facility distances

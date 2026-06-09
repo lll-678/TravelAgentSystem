@@ -2,7 +2,7 @@
   <section class="page-stack">
     <div class="page-heading">
       <div>
-        <h1>地图导览</h1>
+        <h1>地图与目的地</h1>
         <p>可切换全国景点/学校 POI 浏览，或查看校区、景区内部道路、建筑和设施图层。</p>
       </div>
       <div class="heading-actions">
@@ -69,12 +69,26 @@
           <div class="stat"><span>排序</span><strong>{{ destinationSortLabel }}</strong></div>
           <el-segmented v-model="destinationSort" :options="destinationSortOptions" @change="loadDestinationPois" />
           <el-divider />
-          <el-table :data="destinations.slice(0, 8)" size="small" height="300">
+          <el-table :data="destinations" size="small" height="300" @row-click="selectDestination">
             <el-table-column prop="name" label="名称" min-width="120" />
             <el-table-column label="类别" width="72">
               <template #default="{ row }">{{ destinationCategoryLabel(row.category) }}</template>
             </el-table-column>
           </el-table>
+        </el-card>
+        <el-card v-if="viewMode === 'destinations' && selectedDestination" shadow="never" class="result-card">
+          <h2>{{ selectedDestination.name }}</h2>
+          <div class="stat"><span>类别</span><strong>{{ destinationCategoryLabel(selectedDestination.category) }}</strong></div>
+          <div class="stat"><span>评分</span><strong>{{ selectedDestination.rating }}</strong></div>
+          <div class="stat"><span>热度</span><strong>{{ selectedDestination.popularity }}</strong></div>
+          <p class="destination-description">{{ selectedDestination.description }}</p>
+          <el-tag v-for="tag in selectedDestination.tags" :key="tag" class="tag-item">{{ tag }}</el-tag>
+          <el-divider />
+          <el-rate v-model="ratingValue" allow-half />
+          <div class="button-row">
+            <el-button size="small" @click="favoriteSelected">收藏</el-button>
+            <el-button size="small" type="primary" @click="rateSelected">评分</el-button>
+          </div>
         </el-card>
       </el-col>
       <el-col :span="18">
@@ -84,6 +98,7 @@
           :buildings="activeBuildings"
           :facilities="activeFacilities"
           :center="activeCenter"
+          @facility-click="handleMarkerClick"
         />
       </el-col>
     </el-row>
@@ -92,16 +107,19 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import { ElMessage } from "element-plus";
 
 import AMapView from "../components/AMapView.vue";
 import {
   apiGet,
+  apiPost,
   type BuildingItem,
   type DestinationItem,
   type DestinationListPayload,
   type FacilityItem,
   type MapGeoJsonPayload,
 } from "../services/api";
+import { authState } from "../services/auth";
 
 const payload = ref<MapGeoJsonPayload | null>(null);
 const destinations = ref<DestinationItem[]>([]);
@@ -109,6 +127,8 @@ const facilityCategory = ref("");
 const destinationCategory = ref("");
 const destinationKeyword = ref("");
 const destinationSort = ref("popularity");
+const selectedDestination = ref<DestinationItem | null>(null);
+const ratingValue = ref(5);
 const error = ref("");
 const loading = ref(false);
 const viewMode = ref<"scene" | "destinations">("destinations");
@@ -206,11 +226,59 @@ async function loadDestinationPois() {
       if (response.items.length === 0) break;
     }
     destinations.value = collected;
+    selectedDestination.value = collected[0] ?? null;
+    ratingValue.value = selectedDestination.value?.rating ?? 5;
   } catch (requestError) {
     error.value = requestError instanceof Error ? requestError.message : "目的地 POI 加载失败";
   } finally {
     loading.value = false;
   }
+}
+
+function selectDestination(destination: DestinationItem) {
+  selectedDestination.value = destination;
+  ratingValue.value = destination.rating;
+  void recordDestinationView(destination.id);
+}
+
+function handleMarkerClick(facility: FacilityItem) {
+  if (!facility.id.startsWith("destination-")) return;
+  const destinationId = Number(facility.id.replace("destination-", ""));
+  const destination = destinations.value.find((item) => item.id === destinationId);
+  if (destination) {
+    selectDestination(destination);
+  }
+}
+
+async function favoriteSelected() {
+  if (!selectedDestination.value || !authState.user) return;
+  await apiPost(`/api/v1/users/${authState.user.id}/favorites`, {
+    target_type: "destination",
+    target_id: selectedDestination.value.id,
+    note: "地图与目的地页收藏",
+  });
+  ElMessage.success("已收藏，推荐会读取该行为");
+}
+
+async function rateSelected() {
+  if (!selectedDestination.value || !authState.user) return;
+  await apiPost(`/api/v1/users/${authState.user.id}/ratings`, {
+    target_type: "destination",
+    target_id: selectedDestination.value.id,
+    rating: ratingValue.value,
+  });
+  await loadDestinationPois();
+  ElMessage.success("评分已更新");
+}
+
+async function recordDestinationView(destinationId: number) {
+  if (!authState.user) return;
+  await apiPost(`/api/v1/users/${authState.user.id}/behavior`, {
+    target_type: "destination",
+    target_id: destinationId,
+    action: "view",
+    metadata_text: "map destination poi click",
+  });
 }
 
 function destinationCategoryLabel(category: string) {
@@ -247,5 +315,20 @@ onMounted(async () => {
 
 .keyword-input {
   width: 220px;
+}
+
+.destination-description {
+  color: #667085;
+  line-height: 1.7;
+}
+
+.tag-item {
+  margin: 0 6px 6px 0;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
 }
 </style>

@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from "vue-router";
 
 import AdminDashboardPage from "../pages/AdminDashboardPage.vue";
 import AigcAssistantPage from "../pages/AigcAssistantPage.vue";
-import DestinationListPage from "../pages/DestinationListPage.vue";
 import DiaryCommunityPage from "../pages/DiaryCommunityPage.vue";
 import FoodRecommendPage from "../pages/FoodRecommendPage.vue";
 import HomePage from "../pages/HomePage.vue";
@@ -19,7 +18,7 @@ const router = createRouter({
   routes: [
     { path: "/login", name: "login", component: LoginPage },
     { path: "/", name: "home", component: HomePage },
-    { path: "/destinations", name: "destinations", component: DestinationListPage },
+    { path: "/destinations", redirect: "/map" },
     { path: "/profile", name: "profile", component: UserPreferencePage },
     { path: "/map", name: "map-guide", component: MapGuidePage },
     { path: "/routes", name: "route-planner", component: RoutePlannerPage },

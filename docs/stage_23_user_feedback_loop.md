@@ -28,7 +28,7 @@ This stage closes the user-account and recommendation-feedback gaps:
 - `GET /api/v1/users/{id}/behavior`
 - `GET /api/v1/recommendations?strategy=behavior`
 - LoginPage owns application-level register/login. UserPreferencePage edits interests, favorites, ratings, and browse behavior for the current account.
-- DestinationListPage can record view events, favorite destinations, and submit ratings.
+- MapGuidePage destination mode can record view events, favorite destinations, and submit ratings.
 
 ## Validation
 

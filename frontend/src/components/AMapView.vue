@@ -35,6 +35,7 @@ const props = withDefaults(
 );
 const emit = defineEmits<{
   (event: "map-click", coordinate: Coordinate): void;
+  (event: "facility-click", facility: FacilityItem): void;
 }>();
 
 const mapElement = ref<HTMLElement | null>(null);
@@ -88,6 +89,7 @@ function drawOverlays() {
       offset: new AMap.Pixel(-5, -5),
     });
     marker.on("click", () => {
+      emit("facility-click", facility);
       if (!infoWindow) {
         infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -28) });
       }

@@ -31,13 +31,8 @@ const modules = [
     path: "/profile",
   },
   {
-    title: "景点/学校",
-    description: "浏览真实景区与高校目的地，支持分类筛选、关键词搜索和热度/评分排序。",
-    path: "/destinations",
-  },
-  {
-    title: "地图导览",
-    description: "展示道路、建筑区域和设施点，并支持设施类别过滤。",
+    title: "地图与目的地",
+    description: "在地图上浏览景区/学校 POI，也可切换校区和景区内部图层。",
     path: "/map",
   },
   {

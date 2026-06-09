@@ -1,5 +1,6 @@
 <template>
-  <el-container class="app-shell">
+  <router-view v-if="$route.path === '/login'" />
+  <el-container v-else class="app-shell">
     <el-aside width="252px" class="app-sidebar">
       <div class="brand">
         <span class="brand-mark">游</span>
@@ -19,9 +20,15 @@
       <el-header class="app-header">
         <div>
           <strong>{{ currentNavItem?.label ?? "总览" }}</strong>
-          <span>{{ currentNavItem?.description ?? "景点/学校推荐 + 多场景内部导航平台" }}</span>
+          <span>{{ currentNavItem?.description ?? "多场景旅游算法服务平台" }}</span>
         </div>
-        <span class="status-pill">SQLite Dev · AMap</span>
+        <div class="account-bar">
+          <span class="status-pill">SQLite Dev · AMap</span>
+          <el-tag v-if="authState.user" :type="authState.role === 'admin' ? 'warning' : 'success'">
+            {{ authState.user.nickname }} · {{ roleLabel(authState.role) }}
+          </el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
       </el-header>
       <el-main class="app-main">
         <router-view />
@@ -32,14 +39,15 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
-import { isAdmin } from "./services/auth";
+import { authState, clearAuth, isAdmin } from "./services/auth";
 
 const route = useRoute();
+const router = useRouter();
 const navItems = [
-  { path: "/", label: "总览", kicker: "01", description: "项目能力总览与推荐预览" },
-  { path: "/profile", label: "个人偏好", kicker: "02", description: "用户画像、登录和行为反馈" },
+  { path: "/", label: "总览", kicker: "01", description: "服务入口与项目能力总览" },
+  { path: "/profile", label: "个人偏好", kicker: "02", description: "用户画像、兴趣和行为反馈" },
   { path: "/destinations", label: "景点/学校", kicker: "03", description: "全国目的地检索与排序" },
   { path: "/map", label: "地图导览", kicker: "04", description: "多场景道路、建筑和设施图层" },
   { path: "/routes", label: "路线规划", kicker: "05", description: "北邮沙河与颐和园内部导航" },
@@ -53,4 +61,13 @@ const navItems = [
 
 const visibleNavItems = computed(() => navItems.filter((item) => !item.adminOnly || isAdmin()));
 const currentNavItem = computed(() => visibleNavItems.value.find((item) => item.path === route.path));
+
+function roleLabel(role: string) {
+  return role === "admin" ? "管理员" : "普通用户";
+}
+
+async function logout() {
+  clearAuth();
+  await router.replace("/login");
+}
 </script>

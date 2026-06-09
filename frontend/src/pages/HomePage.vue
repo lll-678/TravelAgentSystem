@@ -3,12 +3,12 @@
     <div class="page-heading">
       <div>
         <h1>Smart Tour Guide</h1>
-        <p>面向全国真实景区与高校的推荐，以及学校内部导航、设施和游记演示。</p>
+        <p>请选择要演示的旅游算法服务。推荐、导航、设施、游记、美食和 AIGC 各模块保持独立入口。</p>
       </div>
     </div>
 
     <el-row :gutter="16">
-      <el-col :span="8" v-for="item in modules" :key="item.path">
+      <el-col :span="8" v-for="item in visibleModules" :key="item.path">
         <el-card shadow="never" class="module-card">
           <h2>{{ item.title }}</h2>
           <p>{{ item.description }}</p>
@@ -16,51 +16,22 @@
         </el-card>
       </el-col>
     </el-row>
-
-    <el-card shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span>景点/学校推荐</span>
-          <el-segmented v-model="strategy" :options="strategyOptions" @change="() => loadRecommendations()" />
-        </div>
-      </template>
-      <el-row :gutter="12">
-        <el-col v-for="item in recommendations" :key="item.id" :span="8">
-          <div class="recommendation-item">
-            <div>
-              <strong>{{ item.name }}</strong>
-              <p>{{ item.reason }}</p>
-            </div>
-            <div class="recommendation-score">{{ item.score?.toFixed(2) }}</div>
-          </div>
-        </el-col>
-      </el-row>
-    </el-card>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed } from "vue";
 
-import { apiGet, type DestinationItem, type RecommendationPayload } from "../services/api";
+import { isAdmin } from "../services/auth";
 
-const strategy = ref("composite");
-const recommendations = ref<DestinationItem[]>([]);
-const strategyOptions = [
-  { label: "行为", value: "behavior" },
-  { label: "综合", value: "composite" },
-  { label: "热门", value: "hot" },
-  { label: "高分", value: "rating" },
-  { label: "兴趣", value: "interest" },
-];
 const modules = [
   {
     title: "个人偏好",
-    description: "选择兴趣标签，查看随用户画像变化的推荐结果。",
+    description: "维护当前账号的兴趣画像、收藏、评分和浏览行为。",
     path: "/profile",
   },
   {
-    title: "目的地",
+    title: "景点/学校",
     description: "浏览真实景区与高校目的地，支持分类筛选、关键词搜索和热度/评分排序。",
     path: "/destinations",
   },
@@ -98,45 +69,28 @@ const modules = [
     title: "管理后台",
     description: "查看地图、用户、目的地、游记和美食数据规模。",
     path: "/admin",
+    adminOnly: true,
   },
 ];
 
-async function loadRecommendations() {
-  const payload = await apiGet<RecommendationPayload>(`/api/v1/recommendations?user_id=1&strategy=${strategy.value}&limit=10`);
-  recommendations.value = payload.items;
-}
-
-onMounted(() => {
-  void loadRecommendations();
-});
+const visibleModules = computed(() => modules.filter((item) => !item.adminOnly || isAdmin()));
 </script>
 
 <style scoped>
-.card-header,
-.recommendation-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.module-card {
+  min-height: 180px;
 }
 
-.recommendation-item {
-  min-height: 118px;
-  margin-bottom: 12px;
-  padding: 14px;
-  border: 1px solid #edf1f5;
-  border-radius: 8px;
+.module-card h2 {
+  margin: 0 0 10px;
+  color: #101828;
+  font-size: 18px;
 }
 
-.recommendation-item p {
-  margin: 6px 0 0;
+.module-card p {
+  min-height: 52px;
+  margin: 0 0 18px;
   color: #667085;
-  line-height: 1.5;
-}
-
-.recommendation-score {
-  font-size: 20px;
-  font-weight: 700;
-  color: #176b87;
+  line-height: 1.55;
 }
 </style>

@@ -12,17 +12,18 @@ Smart Tour Guide is an attraction/school recommendation system plus a campus-int
 
 ## Core User Flows
 
-1. Open home dashboard and inspect recommended attractions/schools.
-2. Search attractions/schools by name, category, or keyword.
-3. Select a school/campus context, then open map guide and view internal roads, buildings, and facilities.
-4. Plan an internal campus route and inspect distance/time/steps.
-5. Plan an indoor route across entrance, elevator/stairs, floors, and rooms/exhibition halls.
-6. Query nearby facilities by category and graph distance.
-7. Browse all-user diaries, open details to increase heat, rate/comment after reading, and search by destination/title/body.
-8. Recommend foods by cuisine, rating, heat, and distance.
-9. Generate Agent-style AIGC diary/storyboard output from text and scenic/school media URLs, including a visible tool execution trace.
-10. Check admin data scale and map import status.
-11. Log in as admin to access management tools; normal users should not see or call admin features.
+1. Log in or register through the application-level account gate.
+2. Open the overview page and choose a service module.
+3. Search attractions/schools by name, category, or keyword.
+4. Edit personal interests and inspect recommended attractions/schools in the personal center.
+5. Select a school/campus context, then open map guide and view internal roads, buildings, and facilities.
+6. Plan an internal campus route and inspect distance/time/steps.
+7. Plan an indoor route across entrance, elevator/stairs, floors, and rooms/exhibition halls.
+8. Query nearby facilities by category and graph distance.
+9. Browse all-user diaries, open details to increase heat, rate/comment after reading, and search by destination/title/body.
+10. Recommend foods by cuisine, rating, heat, and distance.
+11. Generate Agent-style AIGC diary/storyboard output from text and scenic/school media URLs, including a visible tool execution trace.
+12. Log in as admin to access management tools; normal users should not see or call admin features.
 
 ## Demo Boundary
 

@@ -163,6 +163,12 @@ select {
   font-weight: 700;
 }
 
+.account-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .app-main {
   padding: 26px 30px 34px;
 }

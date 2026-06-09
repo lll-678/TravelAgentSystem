@@ -3,62 +3,18 @@
     <div class="page-heading">
       <div>
         <h1>个人中心</h1>
-        <p>登录、兴趣、收藏、评分和浏览行为会共同影响推荐结果。</p>
+        <p>维护当前登录账号的兴趣、收藏、评分和浏览行为，并查看推荐结果如何变化。</p>
       </div>
       <el-button type="primary" :loading="saving" @click="saveInterests">保存兴趣</el-button>
     </div>
 
     <el-row :gutter="16">
-      <el-col :span="7">
-        <el-card shadow="never">
-          <template #header>账号登录</template>
-          <el-form label-position="top">
-            <el-form-item label="账号或邮箱">
-              <el-input v-model="loginForm.username_or_email" />
-            </el-form-item>
-            <el-form-item label="密码">
-              <el-input v-model="loginForm.password" type="password" show-password />
-            </el-form-item>
-          </el-form>
-          <div class="button-row">
-            <el-button type="primary" :loading="authLoading" @click="login">登录</el-button>
-            <el-button @click="fillAdminLogin">管理员账号</el-button>
-            <el-button :disabled="!token" @click="verifyToken">校验 Token</el-button>
-          </div>
-          <p v-if="verifiedName" class="muted-text">
-            Token 用户：{{ verifiedName }}
-            <el-tag size="small" :type="authState.role === 'admin' ? 'warning' : 'info'">
-              {{ roleLabel(authState.role) }}
-            </el-tag>
-          </p>
-        </el-card>
-
-        <el-card shadow="never" class="result-card">
-          <template #header>快速注册</template>
-          <el-form label-position="top">
-            <el-form-item label="用户名">
-              <el-input v-model="registerForm.username" />
-            </el-form-item>
-            <el-form-item label="邮箱">
-              <el-input v-model="registerForm.email" />
-            </el-form-item>
-            <el-form-item label="昵称">
-              <el-input v-model="registerForm.nickname" />
-            </el-form-item>
-            <el-form-item label="密码">
-              <el-input v-model="registerForm.password" type="password" show-password />
-            </el-form-item>
-          </el-form>
-          <el-button :loading="authLoading" @click="register">注册并登录</el-button>
-        </el-card>
-      </el-col>
-
-      <el-col :span="8">
+      <el-col :span="9">
         <el-card shadow="never">
           <template #header>画像与行为</template>
           <el-form label-position="top">
             <el-form-item label="当前用户">
-              <el-select v-model="userId" @change="loadProfile">
+              <el-select v-model="userId" :disabled="!isCurrentAdmin" @change="loadProfile">
                 <el-option
                   v-for="user in users"
                   :key="user.id"
@@ -66,6 +22,9 @@
                   :value="user.id"
                 />
               </el-select>
+              <p class="field-note">
+                {{ isCurrentAdmin ? "管理员可切换演示用户。" : "普通用户仅维护自己的账号画像。" }}
+              </p>
             </el-form-item>
             <el-form-item label="兴趣">
               <el-checkbox-group v-model="selectedInterests">
@@ -106,7 +65,7 @@
         </el-card>
       </el-col>
 
-      <el-col :span="9">
+      <el-col :span="15">
         <el-card shadow="never">
           <template #header>
             <div class="card-header">
@@ -131,22 +90,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 
 import {
   apiGet,
-  apiGetWithAuth,
   apiPost,
   apiPut,
-  type AuthPayload,
   type DestinationItem,
   type RecommendationPayload,
   type UserProfileItem,
   type UserListPayload,
   type UserProfilePayload,
 } from "../services/api";
-import { applyAuthPayload, authState, updateAuthUser } from "../services/auth";
+import { authState } from "../services/auth";
 
 const users = ref<UserProfileItem[]>([]);
 const profile = ref<UserProfilePayload | null>(null);
@@ -155,24 +112,11 @@ const availableInterests = ref<string[]>([]);
 const selectedInterests = ref<string[]>([]);
 const recommendations = ref<DestinationItem[]>([]);
 const saving = ref(false);
-const authLoading = ref(false);
 const loadingRecommendations = ref(false);
-const token = computed(() => authState.token);
-const verifiedName = ref("");
 const strategy = ref("behavior");
 const targetDestinationId = ref(1);
 const ratingValue = ref(5);
-
-const loginForm = reactive({
-  username_or_email: "user01",
-  password: "demo123456",
-});
-const registerForm = reactive({
-  username: `visitor_${Date.now().toString().slice(-5)}`,
-  email: `visitor_${Date.now().toString().slice(-5)}@example.com`,
-  nickname: "新游客",
-  password: "demo123456",
-});
+const isCurrentAdmin = computed(() => authState.role === "admin");
 const strategyOptions = [
   { label: "行为", value: "behavior" },
   { label: "兴趣", value: "interest" },
@@ -185,7 +129,7 @@ async function loadUsers() {
   const payload = await apiGet<UserListPayload>("/api/v1/users");
   users.value = payload.items;
   availableInterests.value = payload.available_interests;
-  userId.value = userId.value ?? payload.items[0]?.id ?? null;
+  userId.value = authState.user?.id ?? userId.value ?? payload.items[0]?.id ?? null;
 }
 
 async function loadProfile() {
@@ -195,55 +139,6 @@ async function loadProfile() {
   selectedInterests.value = [...payload.interests];
   availableInterests.value = payload.available_interests;
   await loadRecommendations();
-}
-
-async function login() {
-  authLoading.value = true;
-  try {
-    const payload = await apiPost<AuthPayload>("/api/v1/users/login", loginForm);
-    applyAuth(payload);
-    ElMessage.success("登录成功");
-  } finally {
-    authLoading.value = false;
-  }
-}
-
-async function register() {
-  authLoading.value = true;
-  try {
-    const payload = await apiPost<AuthPayload>("/api/v1/users/register", {
-      ...registerForm,
-      interests: selectedInterests.value,
-    });
-    applyAuth(payload);
-    await loadUsers();
-    ElMessage.success("注册成功");
-  } finally {
-    authLoading.value = false;
-  }
-}
-
-async function verifyToken() {
-  if (!authState.token) return;
-  const payload = await apiGetWithAuth<UserProfilePayload>("/api/v1/users/me", authState.token);
-  updateAuthUser(payload);
-  verifiedName.value = `${payload.nickname} (${payload.username})`;
-}
-
-function applyAuth(payload: AuthPayload) {
-  applyAuthPayload(payload);
-  userId.value = payload.user.id;
-  verifiedName.value = `${payload.user.nickname} (${payload.user.username})`;
-  void loadProfile();
-}
-
-function roleLabel(role: string) {
-  return role === "admin" ? "管理员" : "普通用户";
-}
-
-function fillAdminLogin() {
-  loginForm.username_or_email = "admin01";
-  loginForm.password = "admin123456";
 }
 
 async function saveInterests() {
@@ -311,9 +206,6 @@ async function loadRecommendations() {
 onMounted(async () => {
   await loadUsers();
   await loadProfile();
-  if (token.value) {
-    await verifyToken();
-  }
 });
 </script>
 
@@ -331,9 +223,10 @@ onMounted(async () => {
   justify-content: flex-start;
 }
 
-.muted-text {
-  margin: 12px 0 0;
+.field-note {
+  margin: 8px 0 0;
   color: #667085;
+  font-size: 12px;
 }
 
 .tag-item {

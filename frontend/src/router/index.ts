@@ -7,15 +7,17 @@ import DiaryCommunityPage from "../pages/DiaryCommunityPage.vue";
 import FoodRecommendPage from "../pages/FoodRecommendPage.vue";
 import HomePage from "../pages/HomePage.vue";
 import IndoorNavigationPage from "../pages/IndoorNavigationPage.vue";
+import LoginPage from "../pages/LoginPage.vue";
 import MapGuidePage from "../pages/MapGuidePage.vue";
 import NearbyFacilitiesPage from "../pages/NearbyFacilitiesPage.vue";
 import RoutePlannerPage from "../pages/RoutePlannerPage.vue";
 import UserPreferencePage from "../pages/UserPreferencePage.vue";
-import { isAdmin } from "../services/auth";
+import { authState, isAdmin } from "../services/auth";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: "/login", name: "login", component: LoginPage },
     { path: "/", name: "home", component: HomePage },
     { path: "/destinations", name: "destinations", component: DestinationListPage },
     { path: "/profile", name: "profile", component: UserPreferencePage },
@@ -31,8 +33,14 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
+  if (to.name !== "login" && !authState.token) {
+    return { name: "login", query: { redirect: to.fullPath } };
+  }
+  if (to.name === "login" && authState.token) {
+    return "/";
+  }
   if (to.meta.requiresAdmin && !isAdmin()) {
-    return "/profile";
+    return "/";
   }
   return true;
 });

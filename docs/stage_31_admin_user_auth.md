@@ -55,7 +55,7 @@ Do not hard-code these passwords in frontend source. They belong in seed data an
 ## Frontend Implementation
 
 1. Added a small auth state helper for token, user, and role.
-2. UserPreferencePage stores login role and displays the current role.
+2. LoginPage stores login role; App header displays the current account and role.
 3. App navigation hides the admin item unless the stored auth state is admin.
 4. Router blocks direct `/admin` visits for non-admin users.
 5. AdminDashboardPage attaches bearer token to admin API calls.

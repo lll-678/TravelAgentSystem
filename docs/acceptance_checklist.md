@@ -42,6 +42,8 @@
 
 - [x] User can register.
 - [x] User can log in and receive token.
+- [x] Login is an application-level gate before choosing service modules.
+- [x] Home/overview is a service-entry page and does not render the recommendation preview.
 - [x] Login response includes `role=user|admin`.
 - [x] Seed data includes one normal user account and one admin account.
 - [x] Profile shows nickname, avatar, interests, favorites.
@@ -57,7 +59,7 @@
 - [x] Destination seed uses real China attraction/university names and approximate coordinates.
 - [ ] Destination detail shows rating, popularity, tags, description, related diaries.
 - [x] Search supports attraction/school name/category/keyword.
-- [x] Home shows personalized Top 10 attraction/school recommendations.
+- [x] Personal center shows personalized Top 10 attraction/school recommendations.
 - [x] Recommendation response includes score and reason.
 - [x] Recommendation candidate pool is destination records, not raw campus buildings or facilities.
 - [x] User interests can represent preferred attraction and school categories before recommendation.

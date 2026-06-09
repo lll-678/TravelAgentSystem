@@ -57,7 +57,7 @@ The main weakness is no longer API absence; it is browser-level verification dep
    `bash scripts/check_map_frontend_optional.sh` skips cleanly without key/browser and runs screenshot verification when the environment is prepared.
 
 6. Stage 32: AIGC Agent workflow.
-   Implemented `POST /api/v1/aigc/agent/run`, kept legacy AIGC endpoints, and shows deterministic tool orchestration and trace on the frontend.
+   Implemented `POST /api/v1/aigc/agent/run`, kept legacy AIGC endpoints, and shows deterministic tool orchestration and trace inside DiaryCommunityPage.
 
 7. Stage 34: nearby-facility origin selection.
    Implemented campus origin selector, map-click origin, `origin_place_id` API support, origin marker, and route-distance Top-K result display.

@@ -11,7 +11,7 @@
       <div class="intro-copy">
         <span class="intro-kicker">Account Gateway</span>
         <h1>统一账号入口</h1>
-        <p>登录后进入总览页，再选择推荐、导航、设施、游记、美食或 AIGC 服务。</p>
+        <p>登录后进入总览页，再选择推荐、导航、设施、游记/AIGC 或美食服务。</p>
       </div>
       <div class="intro-metrics">
         <div>

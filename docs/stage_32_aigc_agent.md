@@ -19,7 +19,7 @@ The goal is not to claim real external video generation. The Agent demonstrates 
   - `video_generator_mock`
   - `diary_compressor_summary`
 - Added backend tests for Agent result shape, media-aware output, trace timing, and legacy endpoint compatibility.
-- Updated `AigcAssistantPage` into an Agent workspace with result, storyboard, simulated video link, media summary, compression summary, and trace table/collapse.
+- Updated DiaryCommunityPage with an Agent workspace that shows result, storyboard, simulated video link, media summary, compression summary, and trace table/collapse.
 - Kept existing endpoints backward-compatible:
   - `POST /api/v1/aigc/diary-draft`
   - `POST /api/v1/aigc/storyboard`
@@ -97,7 +97,7 @@ They may call the new Agent internally later, but public behavior should not bre
 
 ## Frontend
 
-`AigcAssistantPage` is a single Agent workspace:
+DiaryCommunityPage includes an Agent workspace:
 
 - task selector
 - destination/campus context input

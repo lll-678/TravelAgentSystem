@@ -50,7 +50,7 @@ Publish a diary, open detail, increment view, rate, comment, and show compressio
 
 Open food page, filter cuisine, search food, show nearby route preview.
 
-## 10. AIGC Assistant
+## 10. 游记社区 AIGC Agent
 
 Generate diary draft and storyboard prompt.
 

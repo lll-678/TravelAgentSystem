@@ -18,7 +18,7 @@ The diary module must be presented as a community and management feature, not on
 | 6. Exact title lookup | Efficient exact lookup by diary title under fast-changing diary data | `diary_title_indexes` stores normalized titles; `GET /api/v1/diaries/search?mode=exact_title` exists | Keep index rebuild on create/update/delete covered by tests |
 | 7. Full-text content search | Search by diary body content | `diary_search_tokens` stores lightweight inverted tokens; `mode=fulltext` searches token hits | Add Chinese segmentation only if higher search quality is needed |
 | 8. Lossless compressed storage | Diary text is compressed before storage and decompressed for read | Current implementation uses `zlib+base64`, records original/compressed sizes, and reports `decompress_ok` | Add a hand-written Huffman codec if the teacher requires a visible custom compression algorithm |
-| 9. AIGC animation from scenic/school photos | Photo input generates tourism animation or simulated video artifact | `POST /api/v1/aigc/storyboard` accepts `media_urls` and returns storyboard plus simulated video link | Connect selected diary media directly into AIGC page and show the generated artifact clearly |
+| 9. AIGC animation from scenic/school photos | Photo input generates tourism animation or simulated video artifact | `POST /api/v1/aigc/storyboard` accepts `media_urls` and returns storyboard plus simulated video link | Selected diary media is connected directly into the DiaryCommunityPage AIGC Agent panel. |
 
 ## Diary API Contract
 

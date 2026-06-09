@@ -3,7 +3,7 @@
     <div class="page-heading">
       <div>
         <h1>Smart Tour Guide</h1>
-        <p>请选择要演示的旅游算法服务。推荐、导航、设施、游记、美食和 AIGC 各模块保持独立入口。</p>
+        <p>请选择要演示的旅游算法服务。推荐、导航、设施、游记/AIGC 和美食模块保持独立入口。</p>
       </div>
     </div>
 
@@ -46,19 +46,14 @@ const modules = [
     path: "/facilities",
   },
   {
-    title: "游记社区",
-    description: "发布、搜索、评分和评论游记，并展示文本压缩统计。",
+    title: "游记与 AIGC",
+    description: "发布、搜索、评分和评论游记，并用 Agent 生成分镜和模拟视频。",
     path: "/diaries",
   },
   {
     title: "美食推荐",
     description: "按菜系、热度、评分和距离推荐校区餐厅与菜品。",
     path: "/foods",
-  },
-  {
-    title: "AIGC 辅助",
-    description: "生成游记草稿、标题和短视频分镜提示词。",
-    path: "/aigc",
   },
   {
     title: "管理后台",

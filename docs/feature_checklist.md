@@ -51,7 +51,7 @@ Run this after `bash scripts/reset_dev_db.sh`.
 - [x] Nearby Facilities
 - [x] Diary Community
 - [x] Food Recommendation
-- [x] AIGC Assistant
+- [x] DiaryCommunityPage AIGC Agent panel
 - [x] Admin Dashboard
 
 ## Required Checks

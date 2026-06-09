@@ -19,7 +19,7 @@ This stage completes the remaining demo-friendly slice of the project plan's fif
 - Extended `GET /api/v1/admin/stats` with core table counts.
 - Added frontend pages:
   - `FoodRecommendPage`
-  - `AigcAssistantPage`
+  - AIGC controls now live in `DiaryCommunityPage`
   - `AdminDashboardPage`
 - Updated route/sidebar/home entries.
 - Added Stage 9 backend tests and smoke coverage.

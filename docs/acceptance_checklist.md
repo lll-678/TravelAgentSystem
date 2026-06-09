@@ -172,7 +172,7 @@
 - [x] Agent response includes `result`, `agent_trace.steps[]`, and `algorithm_trace`.
 - [x] Agent trace shows at least 4 deterministic tool steps with timing and status.
 - [x] Media URLs affect the Agent media-analysis and storyboard output.
-- [x] AIGC Assistant page displays both generated artifact and Agent execution trace.
+- [x] DiaryCommunityPage displays both generated artifact and Agent execution trace.
 - [x] Legacy `diary-draft` and `storyboard` endpoints remain backward-compatible.
 
 ## Admin

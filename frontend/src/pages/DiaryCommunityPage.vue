@@ -3,7 +3,7 @@
     <div class="page-heading">
       <div>
         <h1>游记社区</h1>
-        <p>发布、搜索和浏览沙河校区游记。</p>
+        <p>发布、搜索、浏览和交流游记，并用 AIGC Agent 生成草稿、分镜和模拟视频。</p>
       </div>
       <el-button type="primary" :loading="loading" @click="loadDiaries">刷新</el-button>
     </div>
@@ -37,6 +37,34 @@
           <div class="stat"><span>压缩大小</span><strong>{{ compression.compressed_size }} B</strong></div>
           <div class="stat"><span>压缩率</span><strong>{{ compression.compression_ratio }}</strong></div>
         </el-card>
+
+        <el-card shadow="never" class="result-card">
+          <template #header>AIGC 增强</template>
+          <el-form label-position="top">
+            <el-form-item label="任务">
+              <el-select v-model="agentForm.task">
+                <el-option label="游记动画" value="diary_animation" />
+                <el-option label="游记草稿" value="diary_draft" />
+                <el-option label="分镜脚本" value="storyboard" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="风格">
+              <el-select v-model="agentForm.style">
+                <el-option label="自然" value="natural" />
+                <el-option label="轻快" value="lively" />
+                <el-option label="正式" value="formal" />
+                <el-option label="电影感" value="cinematic" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="镜头数">
+              <el-input-number v-model="agentForm.scene_count" :min="1" :max="8" />
+            </el-form-item>
+            <el-form-item label="媒体素材">
+              <el-input v-model="mediaText" type="textarea" :rows="3" placeholder="/media/demo/campus-photo.jpg" />
+            </el-form-item>
+          </el-form>
+          <el-button type="primary" :loading="agentLoading" @click="runAgent">生成游记动画</el-button>
+        </el-card>
       </el-col>
 
       <el-col :span="9">
@@ -54,7 +82,10 @@
           <template #header>
             <div class="card-header">
               <span>{{ selected.title }}</span>
-              <el-button link type="primary" @click="viewSelected">浏览 +1</el-button>
+              <div class="inline-actions">
+                <el-button link type="primary" @click="syncAgentFromSelected">同步到 AIGC</el-button>
+                <el-button link type="primary" @click="viewSelected">浏览 +1</el-button>
+              </div>
             </div>
           </template>
           <p class="diary-body">{{ selected.body }}</p>
@@ -81,6 +112,35 @@
             {{ item.content }}
           </div>
         </el-card>
+
+        <el-card v-if="agentResult" shadow="never" class="result-card">
+          <template #header>{{ agentResult.result.title }}</template>
+          <p class="text-block">{{ agentResult.result.draft }}</p>
+          <el-divider />
+          <el-timeline>
+            <el-timeline-item v-for="scene in agentResult.result.storyboard" :key="scene.index">
+              <strong>{{ scene.title }}</strong>
+              <p>{{ scene.description }}</p>
+              <small>{{ scene.narration }} · {{ scene.duration_seconds }}s</small>
+            </el-timeline-item>
+          </el-timeline>
+          <el-link type="primary" :href="agentResult.result.simulated_video_url" target="_blank">模拟视频链接</el-link>
+          <el-divider />
+          <div class="stat"><span>工具</span><strong>{{ agentResult.agent_trace.steps.length }}</strong></div>
+          <div class="stat"><span>媒体</span><strong>{{ agentResult.result.media_analysis.media_count }}</strong></div>
+          <div class="stat"><span>耗时</span><strong>{{ agentResult.agent_trace.total_duration_ms }}ms</strong></div>
+          <el-collapse>
+            <el-collapse-item
+              v-for="step in agentResult.agent_trace.steps"
+              :key="step.step"
+              :title="`${step.step}. ${step.tool}`"
+              :name="step.step"
+            >
+              <p class="trace-line">{{ step.input_summary }}</p>
+              <p class="trace-line">{{ step.output_summary }}</p>
+            </el-collapse-item>
+          </el-collapse>
+        </el-card>
       </el-col>
     </el-row>
   </section>
@@ -92,11 +152,13 @@ import { onMounted, reactive, ref } from "vue";
 import {
   apiGet,
   apiPost,
+  type AigcAgentPayload,
   type DiaryCommentItem,
   type DiaryCompressionPayload,
   type DiaryItem,
   type DiaryListPayload,
 } from "../services/api";
+import { authState } from "../services/auth";
 
 const loading = ref(false);
 const creating = ref(false);
@@ -107,6 +169,9 @@ const selected = ref<DiaryItem | null>(null);
 const compression = ref<DiaryCompressionPayload | null>(null);
 const rating = ref(5);
 const comment = ref("");
+const agentLoading = ref(false);
+const mediaText = ref("/media/demo/campus-photo.jpg");
+const agentResult = ref<AigcAgentPayload | null>(null);
 const searchModeOptions = [
   { label: "全文", value: "fulltext" },
   { label: "精确标题", value: "exact_title" },
@@ -116,6 +181,13 @@ const form = reactive({
   title: "沙河校区新游记",
   body: "今天在沙河校区完成了一次路线和设施查询体验，地图路径很清晰。",
   media_url: "/media/demo/campus-photo.jpg",
+});
+const agentForm = reactive({
+  task: "diary_animation",
+  text: form.body,
+  destination_name: "北京邮电大学沙河校区",
+  style: "cinematic",
+  scene_count: 4,
 });
 
 async function loadDiaries() {
@@ -146,7 +218,7 @@ async function createDiary() {
   creating.value = true;
   try {
     const diary = await apiPost<DiaryItem>("/api/v1/diaries", {
-      user_id: 1,
+      user_id: authState.user?.id ?? 1,
       destination_id: 1,
       title: form.title,
       body: form.body,
@@ -168,6 +240,7 @@ async function createDiary() {
 async function selectDiary(row: DiaryItem) {
   selected.value = await apiGet<DiaryItem>(`/api/v1/diaries/${row.id}`);
   compression.value = await apiGet<DiaryCompressionPayload>(`/api/v1/diaries/${row.id}/compression`);
+  syncAgentFromSelected();
 }
 
 async function viewSelected() {
@@ -179,7 +252,7 @@ async function viewSelected() {
 async function rateSelected() {
   if (!selected.value) return;
   const updated = await apiPost<DiaryItem>(`/api/v1/diaries/${selected.value.id}/rating`, {
-    user_id: 1,
+    user_id: authState.user?.id ?? 1,
     value: rating.value,
   });
   mergeSelectedSummary(updated);
@@ -188,11 +261,40 @@ async function rateSelected() {
 async function commentSelected() {
   if (!selected.value || !comment.value.trim()) return;
   const created = await apiPost<DiaryCommentItem>(`/api/v1/diaries/${selected.value.id}/comments`, {
-    user_id: 1,
+    user_id: authState.user?.id ?? 1,
     content: comment.value.trim(),
   });
   selected.value.comments = [...(selected.value.comments ?? []), created];
   comment.value = "";
+}
+
+async function runAgent() {
+  agentLoading.value = true;
+  try {
+    agentResult.value = await apiPost<AigcAgentPayload>("/api/v1/aigc/agent/run", {
+      ...agentForm,
+      media_urls: parseMediaUrls(),
+    });
+  } finally {
+    agentLoading.value = false;
+  }
+}
+
+function syncAgentFromSelected() {
+  if (!selected.value) return;
+  agentForm.text = selected.value.body ?? selected.value.summary;
+  agentForm.destination_name = selected.value.title;
+  const mediaUrls = selected.value.media?.map((item) => item.url).filter(Boolean) ?? [];
+  if (mediaUrls.length > 0) {
+    mediaText.value = mediaUrls.join("\n");
+  }
+}
+
+function parseMediaUrls() {
+  return mediaText.value
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function mergeSelectedSummary(updated: DiaryItem) {
@@ -222,7 +324,8 @@ onMounted(() => {
 
 <style scoped>
 .card-header,
-.diary-actions {
+.diary-actions,
+.inline-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -233,6 +336,18 @@ onMounted(() => {
   color: #475467;
   line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.text-block,
+.trace-line {
+  color: #475467;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.trace-line {
+  margin: 0 0 8px;
+  line-height: 1.6;
 }
 
 .comment-button {

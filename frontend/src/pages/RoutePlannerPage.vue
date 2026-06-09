@@ -235,6 +235,7 @@ const mapCenter = computed(() => mapPayload.value?.center ?? currentScene.value.
 const roadPaths = computed(() => mapPayload.value?.roads.map((road) => road.path) ?? []);
 const sceneBuildings = computed<BuildingItem[]>(() => mapPayload.value?.buildings ?? []);
 const sceneFacilities = computed<FacilityItem[]>(() => mapPayload.value?.facilities ?? []);
+const ROUTE_OPTION_LIMIT = 200;
 
 async function searchRoutePlaces(query: string) {
   const keyword = query.trim();
@@ -242,7 +243,7 @@ async function searchRoutePlaces(query: string) {
   try {
     const params = new URLSearchParams({
       keyword,
-      limit: keyword ? "30" : "100",
+      limit: keyword ? "80" : String(ROUTE_OPTION_LIMIT),
       scope: currentScene.value.scope,
       scene_key: selectedSceneKey.value,
     });
@@ -262,7 +263,7 @@ function mergeRouteOptions(items: SearchPlaceItem[]) {
     optionCache[item.id] = item;
     byId.set(item.id, item);
   }
-  routeOptions.value = Array.from(byId.values()).slice(0, 80);
+  routeOptions.value = Array.from(byId.values()).slice(0, ROUTE_OPTION_LIMIT);
 }
 
 function placeLabel(item: SearchPlaceItem) {

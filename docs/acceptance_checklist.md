@@ -30,6 +30,8 @@
 - [x] `buildings` count >= 60.
 - [x] `facilities` count >= 120.
 - [x] Facility categories count >= 10.
+- [x] `bash scripts/check_data_requirements.sh` verifies course data-volume requirements.
+- [x] Current cleaned data has 207 destinations; BUPT 246 roads/56 buildings/55 facilities/16 facility categories; Summer Palace 626 roads/228 buildings/79 facilities/10 facility categories.
 - [x] `GET /api/v1/map/stats` reads the local database and returns map scale counts.
 - [x] OSM import pipeline can import an OSM-shaped payload into map tables.
 - [x] Reference campus source directory is documented for WGS84 JSON/GeoJSON and topology files.
@@ -111,6 +113,7 @@
 - [x] Summer Palace scene restores from saved real OSMnx payload after `bash scripts/reset_dev_db.sh`.
 - [x] Summer Palace supports route planning, multi-point planning, and nearby facility lookup by graph distance.
 - [x] Summer Palace route endpoint search hides generic `OSM building` / `poi` names and normalizes generic facility labels such as `toilets` to `洗手间`.
+- [x] RoutePlannerPage keeps up to 200 selectable route candidates so Summer Palace can expose all current cleaned internal endpoint candidates.
 
 ## Indoor Navigation
 

@@ -145,6 +145,7 @@
 - [x] AIGC flow accepts scenic/school image or video URLs from diary media.
 - [x] AIGC flow returns storyboard scenes and a simulated tourism animation/video link.
 - [x] `/diaries` is a dedicated browse/search/detail page.
+- [x] `/diaries` uses a card-style community result list and reader panel instead of a dense table-first layout.
 - [x] `/diaries/create` is a dedicated publish/AIGC creation page.
 
 ## Food

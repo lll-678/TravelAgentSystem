@@ -13,9 +13,19 @@
 
     <el-alert v-if="error" :title="error" type="error" show-icon />
 
-    <el-row :gutter="16">
+    <el-row :gutter="18" class="workbench-layout nearby-workbench">
       <el-col :span="7">
-        <el-card shadow="never">
+        <el-card shadow="never" class="control-panel">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>附近查询控制台</strong>
+                <small>{{ currentScene.shortName }} · 道路距离 Top-K</small>
+              </div>
+              <el-tag effect="plain">{{ resolvedCategory }}</el-tag>
+            </div>
+          </template>
+          <p class="control-note">先确定当前位置，再按类别过滤设施，最后用道路图最短路距离排序，不使用直线距离。</p>
           <el-form label-position="top">
             <el-form-item label="当前位置">
               <el-select
@@ -69,37 +79,55 @@
         </el-card>
 
         <el-card shadow="never" class="result-card">
-          <div class="stat"><span>当前位置</span><strong>{{ selectedOrigin.name }}</strong></div>
-          <div class="stat"><span>类别</span><strong>{{ resolvedCategory }}</strong></div>
-          <div class="stat"><span>结果</span><strong>{{ facilities.length }}</strong></div>
-        </el-card>
-
-        <el-card shadow="never" class="result-card">
-          <el-table :data="facilities" size="small">
-            <el-table-column prop="name" label="设施" />
-            <el-table-column prop="category_name" label="类别" width="96" />
-            <el-table-column prop="distance" label="距离" width="88">
-              <template #default="{ row }">{{ row.distance }}m</template>
-            </el-table-column>
-            <el-table-column label="路线" width="80">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="routePath = row.routePath ?? []">绘制</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>查询结果</strong>
+                <small>{{ selectedOrigin.name }}</small>
+              </div>
+              <el-tag effect="plain">{{ facilities.length }} 项</el-tag>
+            </div>
+          </template>
+          <div class="metric-grid nearby-metrics">
+            <div class="metric-tile"><span>当前位置</span><strong>{{ selectedOrigin.name }}</strong></div>
+            <div class="metric-tile"><span>类别</span><strong>{{ resolvedCategory }}</strong></div>
+          </div>
+          <div class="result-list facility-list">
+            <article v-for="facility in facilities" :key="facility.id" class="result-item facility-item">
+              <div>
+                <h3>{{ facility.name }}</h3>
+                <p>{{ facility.category_name }} · {{ facility.distance }}m</p>
+              </div>
+              <el-button size="small" type="primary" plain @click="routePath = facility.routePath ?? []">绘制</el-button>
+            </article>
+            <el-empty v-if="!loading && facilities.length === 0" description="没有匹配的附近设施" />
+          </div>
         </el-card>
       </el-col>
 
       <el-col :span="17">
-        <AMapView
-          :facilities="facilities"
-          :road-paths="roadPaths"
-          :buildings="mapPayload?.buildings ?? []"
-          :route-path="routePath"
-          :center="mapPayload?.center ?? currentScene.center"
-          :origin="selectedOrigin"
-          @map-click="handleMapClick"
-        />
+        <div class="map-workspace">
+          <div class="map-workspace-header">
+            <div>
+              <h2>{{ currentScene.shortName }}附近设施图</h2>
+              <p>点击地图可重新设置当前位置，结果按道路图距离重新计算。</p>
+            </div>
+            <div class="workspace-actions">
+              <span class="data-chip">{{ selectedOrigin.name }}</span>
+              <span class="data-chip">{{ facilities.length }} 设施</span>
+              <span class="data-chip">{{ radius }} m</span>
+            </div>
+          </div>
+          <AMapView
+            :facilities="facilities"
+            :road-paths="roadPaths"
+            :buildings="mapPayload?.buildings ?? []"
+            :route-path="routePath"
+            :center="mapPayload?.center ?? currentScene.center"
+            :origin="selectedOrigin"
+            @map-click="handleMapClick"
+          />
+        </div>
       </el-col>
     </el-row>
   </section>
@@ -354,5 +382,25 @@ onMounted(async () => {
 
 .advanced-panel {
   margin: 4px 0 14px;
+}
+
+.nearby-workbench {
+  align-items: start;
+}
+
+.nearby-metrics {
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 12px;
+}
+
+.facility-list {
+  max-height: 380px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.facility-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
 }
 </style>

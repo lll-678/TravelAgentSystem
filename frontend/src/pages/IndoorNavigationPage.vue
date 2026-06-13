@@ -8,9 +8,19 @@
       <el-button type="primary" :loading="loading" @click="planRoute">规划室内路线</el-button>
     </div>
 
-    <el-row :gutter="16">
+    <el-row :gutter="18" class="workbench-layout indoor-workbench">
       <el-col :xs="24" :lg="7">
-        <el-card shadow="never">
+        <el-card shadow="never" class="control-panel">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>室内路线控制台</strong>
+                <small>{{ buildingName }} · {{ routeModeLabel(routeMode) }}</small>
+              </div>
+              <el-tag effect="plain">Dijkstra</el-tag>
+            </div>
+          </template>
+          <p class="control-note">模拟建筑内部结构，包含入口、电梯、扶梯、楼梯、展厅和跨楼层路径。</p>
           <el-form label-position="top">
             <el-form-item label="建筑">
               <el-select v-model="buildingName" @change="loadNodes">
@@ -53,6 +63,14 @@
         </el-card>
 
         <el-card v-if="route" shadow="never" class="result-card">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>室内路线结果</strong>
+                <small>{{ route.start.name }} 到 {{ route.end.name }}</small>
+              </div>
+            </div>
+          </template>
           <div class="stat"><span>总距离</span><strong>{{ route.distance }} m</strong></div>
           <div class="stat"><span>预计时间</span><strong>{{ Math.round(route.duration) }} s</strong></div>
           <div class="stat"><span>模式</span><strong>{{ routeModeLabel(route.route_mode) }}</strong></div>
@@ -71,7 +89,16 @@
       </el-col>
 
       <el-col :xs="24" :lg="17">
-        <el-card shadow="never">
+        <el-card shadow="never" class="workbench-panel">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>楼层平面示意</strong>
+                <small>高亮节点为当前路线经过的室内图节点</small>
+              </div>
+              <el-tag effect="plain">{{ activeFloor }}</el-tag>
+            </div>
+          </template>
           <el-tabs v-model="activeFloor">
             <el-tab-pane
               v-for="floor in floors"
@@ -209,6 +236,33 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.indoor-workbench {
+  align-items: start;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-header strong,
+.panel-header small {
+  display: block;
+}
+
+.panel-header strong {
+  color: #101828;
+  font-size: 16px;
+}
+
+.panel-header small {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+}
+
 .floor-plan {
   position: relative;
   min-height: 420px;

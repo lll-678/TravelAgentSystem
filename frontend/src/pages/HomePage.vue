@@ -11,13 +11,16 @@
       </div>
     </div>
 
-    <div class="dashboard-hero">
+    <div class="dashboard-hero product-hero">
       <div>
         <span class="dashboard-kicker">Algorithm Service Platform</span>
         <h2>完整旅游算法服务，而不是孤立 Demo</h2>
         <p>每个核心模块都返回 algorithm_trace，前端展示算法、候选规模、返回数量和耗时信息，方便答辩时直接说明实现路径。</p>
       </div>
       <div class="dashboard-actions">
+        <span class="data-chip">207 目的地</span>
+        <span class="data-chip">双场景路网</span>
+        <span class="data-chip">Trace 可解释</span>
         <el-button type="primary" @click="$router.push('/profile')">AI 用户画像</el-button>
         <el-button @click="$router.push('/routes')">路线规划</el-button>
         <el-button @click="$router.push('/foods')">美食推荐</el-button>
@@ -74,9 +77,13 @@
     <el-row :gutter="16">
       <el-col :span="8" v-for="item in visibleModules" :key="item.path">
         <el-card shadow="never" class="module-card">
+          <span class="module-badge">{{ item.tag }}</span>
           <h2>{{ item.title }}</h2>
           <p>{{ item.description }}</p>
-          <el-button type="primary" plain @click="$router.push(item.path)">进入</el-button>
+          <div class="module-footer">
+            <span>{{ item.path }}</span>
+            <el-button type="primary" plain @click="$router.push(item.path)">进入</el-button>
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -129,46 +136,55 @@ const algorithmCards = [
 const modules = [
   {
     title: "答辩演示",
+    tag: "Trace",
     description: "一页展示核心接口、算法 trace 和 ECharts 关系图。",
     path: "/demo",
   },
   {
     title: "个人偏好",
+    tag: "LLM",
     description: "维护当前账号的兴趣画像、收藏、评分和浏览行为。",
     path: "/profile",
   },
   {
     title: "地图与目的地",
+    tag: "POI",
     description: "在地图上浏览景区/学校 POI，也可切换校区和景区内部图层。",
     path: "/map",
   },
   {
     title: "路线规划",
+    tag: "Graph",
     description: "选择校门、楼宇、设施或命名点，绘制北邮沙河和颐和园内部路线。",
     path: "/routes",
   },
   {
     title: "附近设施",
+    tag: "Dijkstra",
     description: "按类别查询设施，并使用道路图距离进行 Top-K 排序。",
     path: "/facilities",
   },
   {
     title: "游记社区",
+    tag: "Search",
     description: "查询、浏览、评分和评论所有用户的目的地游记。",
     path: "/diaries",
   },
   {
     title: "发布与 AIGC",
+    tag: "Agent",
     description: "发布景区或学校游记，并用 Agent 生成分镜和模拟视频。",
     path: "/diaries/create",
   },
   {
     title: "美食推荐",
+    tag: "Food",
     description: "按菜系、热度、评分和距离推荐目的地周边餐厅与菜品。",
     path: "/foods",
   },
   {
     title: "管理后台",
+    tag: "Admin",
     description: "查看地图、用户、目的地、游记和美食数据规模。",
     path: "/admin",
     adminOnly: true,
@@ -216,10 +232,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 24px;
-  border: 1px solid #d6ebe7;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #ffffff, #f0faf8);
+  padding: 26px;
 }
 
 .dashboard-kicker {
@@ -246,11 +259,24 @@ onMounted(() => {
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
-  min-width: 320px;
+  max-width: 390px;
+  min-width: 340px;
 }
 
 .metric-card {
   min-height: 138px;
+  position: relative;
+}
+
+.metric-card::after {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 30px;
+  height: 3px;
+  border-radius: 999px;
+  background: #d6ebe7;
+  content: "";
 }
 
 .metric-card span {
@@ -295,7 +321,15 @@ onMounted(() => {
   padding: 14px;
   border: 1px solid #e4e7ec;
   border-radius: 8px;
-  background: #fcfcfd;
+  background: linear-gradient(180deg, #ffffff, #fcfcfd);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.algorithm-card:hover {
+  border-color: #b7dcd6;
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.06);
 }
 
 .algorithm-card span {
@@ -313,5 +347,30 @@ onMounted(() => {
   margin: 0;
   color: #667085;
   line-height: 1.6;
+}
+
+.module-badge {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 5px 9px;
+  border: 1px solid #d6ebe7;
+  border-radius: 999px;
+  background: #f0faf8;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.module-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.module-footer span {
+  color: #98a2b3;
+  font-size: 12px;
+  font-weight: 700;
 }
 </style>

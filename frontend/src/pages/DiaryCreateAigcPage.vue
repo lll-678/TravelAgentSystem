@@ -8,10 +8,17 @@
       <el-button @click="$router.push('/diaries')">返回游记列表</el-button>
     </div>
 
-    <el-row :gutter="16">
+    <el-row :gutter="18" class="workbench-layout create-aigc-layout">
       <el-col :xs="24" :lg="10">
-        <el-card shadow="never">
-          <template #header>发布游记</template>
+        <el-card shadow="never" class="control-panel">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>发布游记</strong>
+                <small>正文会压缩存储，并进入社区检索池</small>
+              </div>
+            </div>
+          </template>
           <el-form label-position="top">
             <el-form-item label="标题">
               <el-input v-model="form.title" maxlength="160" />
@@ -39,7 +46,15 @@
 
       <el-col :xs="24" :lg="14">
         <el-card shadow="never">
-          <template #header>AIGC Agent</template>
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>AIGC Agent</strong>
+                <small>媒体理解、草稿生成、分镜和模拟视频链路</small>
+              </div>
+              <el-tag effect="plain">Agent Trace</el-tag>
+            </div>
+          </template>
           <div class="aigc-grid">
             <section>
               <el-form label-position="top">
@@ -192,6 +207,33 @@ function parseMediaUrls() {
 </script>
 
 <style scoped>
+.create-aigc-layout {
+  align-items: start;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-header strong,
+.panel-header small {
+  display: block;
+}
+
+.panel-header strong {
+  color: #101828;
+  font-size: 16px;
+}
+
+.panel-header small {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+}
+
 .action-row {
   display: flex;
   flex-wrap: wrap;

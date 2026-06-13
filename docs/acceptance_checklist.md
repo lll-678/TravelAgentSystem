@@ -77,6 +77,10 @@
 - [x] Defense demo page shows core API `algorithm_trace` values in readable panels.
 - [x] Defense demo page renders an ECharts relationship graph for destination, route, facility, diary, food, and user-profile entities.
 - [x] A lightweight explanation panel summarizes why each module is relevant to the course requirements.
+- [x] Stage 44 frontend polish gives the app a consistent product shell, navigation style, page heading, panel, table, card, and trace presentation.
+- [x] Core user-facing pages avoid table-first/course-project layouts where cards, summaries, and workbench panels are more appropriate.
+- [x] Map, route, and nearby facility pages clearly separate control panels, map canvas, result summaries, and algorithm/status information.
+- [x] The AMap component shows layer status and a polished fallback when the key or map runtime is unavailable.
 
 ## Map And Routing
 

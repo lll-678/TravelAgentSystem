@@ -13,9 +13,19 @@
 
     <el-alert v-if="error" :title="error" type="error" show-icon />
 
-    <el-row :gutter="16">
+    <el-row :gutter="18" class="workbench-layout route-workbench">
       <el-col :span="7">
-        <el-card shadow="never">
+        <el-card shadow="never" class="control-panel">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>路线控制台</strong>
+                <small>{{ currentScene.shortName }} · {{ routeSourceLabel(form.route_source) }}</small>
+              </div>
+              <el-tag effect="plain">{{ form.mode }}</el-tag>
+            </div>
+          </template>
+          <p class="control-note">优先选择命名场所，坐标输入仅作为调试兜底。路线由本地道路图 Dijkstra 计算并绘制。</p>
           <el-form label-position="top">
             <el-form-item label="起点">
               <el-select
@@ -118,10 +128,21 @@
               <el-checkbox v-model="returnToStart">回到起点</el-checkbox>
             </el-form-item>
           </el-form>
-          <el-button :loading="loading" @click="planMultiPointRoute">规划多点路线</el-button>
+          <div class="button-row">
+            <el-button type="primary" plain :loading="loading" @click="planMultiPointRoute">规划多点路线</el-button>
+          </div>
         </el-card>
 
         <el-card v-if="route" shadow="never" class="result-card">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>路线结果</strong>
+                <small>{{ route.strategy }} / {{ route.mode }}</small>
+              </div>
+              <el-tag type="success" effect="plain">{{ route.path.length }} 点</el-tag>
+            </div>
+          </template>
           <div v-if="route.start && route.end" class="route-endpoints">
             <span>{{ route.start.name }}</span>
             <strong>→</strong>
@@ -145,13 +166,27 @@
       </el-col>
 
       <el-col :span="17">
-        <AMapView
-          :road-paths="roadPaths"
-          :buildings="sceneBuildings"
-          :facilities="sceneFacilities"
-          :route-path="route?.path ?? []"
-          :center="mapCenter"
-        />
+        <div class="map-workspace">
+          <div class="map-workspace-header">
+            <div>
+              <h2>{{ currentScene.shortName }}内部导航图</h2>
+              <p>{{ route ? `${route.start?.name ?? "起点"} 到 ${route.end?.name ?? "终点"}` : "请选择起终点后规划路线。" }}</p>
+            </div>
+            <div class="workspace-actions">
+              <span class="data-chip">{{ roadPaths.length }} 道路</span>
+              <span class="data-chip">{{ sceneBuildings.length }} 建筑</span>
+              <span class="data-chip">{{ sceneFacilities.length }} 场所</span>
+              <span v-if="route" class="data-chip">{{ route.distance }} m</span>
+            </div>
+          </div>
+          <AMapView
+            :road-paths="roadPaths"
+            :buildings="sceneBuildings"
+            :facilities="sceneFacilities"
+            :route-path="route?.path ?? []"
+            :center="mapCenter"
+          />
+        </div>
       </el-col>
     </el-row>
   </section>
@@ -447,11 +482,19 @@ onMounted(async () => {
   margin: 4px 0 14px;
 }
 
+.route-workbench {
+  align-items: start;
+}
+
 .route-endpoints {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  padding: 11px 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 8px;
+  background: #f9fafb;
   font-size: 14px;
 }
 

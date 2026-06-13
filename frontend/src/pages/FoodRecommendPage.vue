@@ -13,8 +13,16 @@
 
     <el-row :gutter="18" class="food-top-layout">
       <el-col :xs="24" :lg="8">
-        <el-card shadow="never" class="filter-card">
-          <template #header>筛选与排序</template>
+        <el-card shadow="never" class="filter-card control-panel">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>美食筛选</strong>
+                <small>{{ selectedDestination?.name ?? "全部目的地" }}</small>
+              </div>
+              <el-tag effect="plain">{{ sortLabel(lastTrace?.sort ?? sort) }}</el-tag>
+            </div>
+          </template>
           <el-form label-position="top">
             <el-form-item label="关键词">
               <el-input v-model="keyword" clearable placeholder="餐厅、菜系、地址或窗口" @keyup.enter="searchFoods" />
@@ -65,7 +73,19 @@
       </el-col>
 
       <el-col :xs="24" :lg="16">
-        <AMapView :facilities="foodMarkers" :route-path="routePath" />
+        <div class="map-workspace">
+          <div class="map-workspace-header">
+            <div>
+              <h2>餐厅位置与路线预览</h2>
+              <p>推荐结果使用目的地范围、菜系、热度、评分和距离综合计算。</p>
+            </div>
+            <div class="workspace-actions">
+              <span class="data-chip">{{ foodMarkers.length }} 餐厅</span>
+              <span class="data-chip">{{ routePath.length > 0 ? "已绘制路线" : "待选路线" }}</span>
+            </div>
+          </div>
+          <AMapView :facilities="foodMarkers" :route-path="routePath" />
+        </div>
         <el-card v-if="lastTrace" shadow="never" class="result-card">
           <template #header>算法记录</template>
           <p class="trace-line">{{ lastTrace.algorithm }}</p>
@@ -468,7 +488,7 @@ onMounted(async () => {
   padding: 14px;
   border: 1px solid #edf1f5;
   border-radius: 8px;
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff, #fcfcfd);
   transition:
     border-color 0.16s ease,
     box-shadow 0.16s ease,
@@ -494,6 +514,7 @@ onMounted(async () => {
   background-image: url("/images/food-cuisine-collage.png");
   background-repeat: no-repeat;
   background-size: 300% 200%;
+  box-shadow: inset 0 -40px 70px rgba(16, 24, 40, 0.18);
 }
 
 .food-cover::before {

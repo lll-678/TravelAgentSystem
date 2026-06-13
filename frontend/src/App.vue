@@ -12,22 +12,34 @@
       <el-menu router :default-active="$route.path" class="nav-menu">
         <el-menu-item v-for="item in visibleNavItems" :key="item.path" :index="item.path">
           <span class="nav-kicker">{{ item.kicker }}</span>
-          <span>{{ item.label }}</span>
+          <span class="nav-content">
+            <span class="nav-label">{{ item.label }}</span>
+            <span class="nav-desc">{{ item.description }}</span>
+          </span>
         </el-menu-item>
       </el-menu>
+      <div class="sidebar-foot">
+        <span>Demo Runtime</span>
+        <strong>FastAPI · Vue · AMap · SQLite</strong>
+      </div>
     </el-aside>
     <el-container>
       <el-header class="app-header">
-        <div>
+        <div class="header-context">
+          <div>
           <strong>{{ currentNavItem?.label ?? "总览" }}</strong>
           <span>{{ currentNavItem?.description ?? "多场景旅游算法服务平台" }}</span>
+          </div>
         </div>
         <div class="account-bar">
           <span class="status-pill">SQLite Dev · AMap</span>
-          <el-tag v-if="authState.user" :type="authState.role === 'admin' ? 'warning' : 'success'">
-            {{ authState.user.nickname }} · {{ roleLabel(authState.role) }}
-          </el-tag>
-          <el-button size="small" @click="logout">退出</el-button>
+          <span v-if="authState.user" class="account-card">
+            <el-tag :type="authState.role === 'admin' ? 'warning' : 'success'">
+              {{ roleLabel(authState.role) }}
+            </el-tag>
+            <strong>{{ authState.user.nickname }}</strong>
+          </span>
+          <el-button size="small" plain @click="logout">退出</el-button>
         </div>
       </el-header>
       <el-main class="app-main">

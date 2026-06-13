@@ -1,5 +1,9 @@
 <template>
   <div class="amap-shell">
+    <div class="amap-layer-bar">
+      <span>AMap</span>
+      <strong>{{ layerSummary }}</strong>
+    </div>
     <div ref="mapElement" class="amap-container" />
     <div v-if="loadError" class="amap-fallback">
       <strong>地图渲染待配置</strong>
@@ -9,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import type { BuildingItem, Coordinate, FacilityItem } from "../services/api";
 import { loadAMap } from "../utils/amap";
@@ -45,6 +49,18 @@ let AMap: any = null;
 let map: any = null;
 let infoWindow: any = null;
 let overlays: any[] = [];
+
+const layerSummary = computed(() => {
+  const parts = [
+    `${props.roadPaths.length} 路段`,
+    `${props.buildings.length} 建筑`,
+    `${props.facilities.length} POI`,
+  ];
+  if (props.routePath.length > 0) {
+    parts.push(`${props.routePath.length} 路线点`);
+  }
+  return parts.join(" · ");
+});
 
 function clearOverlays() {
   if (map && overlays.length > 0) {
@@ -192,6 +208,39 @@ watch(
   height: 100%;
 }
 
+.amap-layer-bar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  max-width: calc(100% - 28px);
+  overflow: hidden;
+  border: 1px solid rgba(208, 213, 221, 0.86);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.amap-layer-bar span {
+  padding: 8px 10px;
+  background: #0f766e;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.amap-layer-bar strong {
+  overflow: hidden;
+  padding: 8px 12px;
+  color: #344054;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .amap-fallback {
   position: absolute;
   inset: 0;
@@ -202,7 +251,7 @@ watch(
   color: #344054;
   text-align: center;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.86)),
     repeating-linear-gradient(45deg, #eef4f3 0, #eef4f3 10px, #e2e8f0 10px, #e2e8f0 20px);
 }
 

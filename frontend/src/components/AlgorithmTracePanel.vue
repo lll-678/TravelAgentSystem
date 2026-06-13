@@ -40,6 +40,7 @@ function formatValue(value: unknown) {
 .trace-panel {
   display: grid;
   gap: 12px;
+  padding: 2px;
 }
 
 .trace-title {
@@ -63,7 +64,8 @@ function formatValue(value: unknown) {
   padding: 10px 12px;
   border: 1px solid #e4e7ec;
   border-radius: 8px;
-  background: #f9fafb;
+  background: linear-gradient(180deg, #ffffff, #f9fafb);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
 }
 
 .trace-item span {
@@ -79,5 +81,10 @@ function formatValue(value: unknown) {
   color: #101828;
   font-size: 13px;
   line-height: 1.45;
+}
+
+.trace-item:first-child {
+  border-color: #d6ebe7;
+  background: #f0faf8;
 }
 </style>

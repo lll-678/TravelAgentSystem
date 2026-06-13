@@ -11,11 +11,16 @@
       </div>
     </div>
 
-    <div class="demo-hero">
+    <div class="demo-hero product-hero">
       <div>
         <span class="hero-kicker">Stage 43</span>
         <h2>Demo Experience + LLM User Profile</h2>
         <p>课程核心算法仍由 Dijkstra、Top-K 堆、倒排索引、Huffman 和图距离排序承担；LLM 只在用户画像解释层增强兴趣标签。</p>
+        <div class="hero-chip-row">
+          <span class="data-chip">确定性算法主链路</span>
+          <span class="data-chip">LLM 可降级</span>
+          <span class="data-chip">接口 Trace 可视化</span>
+        </div>
       </div>
       <div class="hero-metrics">
         <div><span>目的地</span><strong>{{ dashboard.destinations }}</strong></div>
@@ -374,9 +379,6 @@ onBeforeUnmount(() => {
   gap: 18px;
   align-items: stretch;
   padding: 22px;
-  border: 1px solid #d6ebe7;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #ffffff, #f0faf8);
 }
 
 .hero-kicker {
@@ -398,6 +400,13 @@ onBeforeUnmount(() => {
   line-height: 1.7;
 }
 
+.hero-chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -408,7 +417,8 @@ onBeforeUnmount(() => {
   padding: 14px;
   border: 1px solid #d6ebe7;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.04);
 }
 
 .hero-metrics span,
@@ -435,6 +445,10 @@ onBeforeUnmount(() => {
 .demo-graph {
   width: 100%;
   height: 430px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(249, 250, 251, 0.86), rgba(255, 255, 255, 0.96)),
+    #ffffff;
 }
 
 .assistant-card {
@@ -444,8 +458,9 @@ onBeforeUnmount(() => {
 .assistant-copy {
   margin-bottom: 16px;
   padding: 14px;
+  border: 1px solid #edf1f5;
   border-radius: 8px;
-  background: #f9fafb;
+  background: linear-gradient(180deg, #ffffff, #f9fafb);
 }
 
 .assistant-copy h3 {
@@ -461,6 +476,16 @@ onBeforeUnmount(() => {
 
 .demo-card {
   min-height: 360px;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.demo-card:hover {
+  border-color: #b7dcd6 !important;
+  box-shadow: 0 14px 30px rgba(16, 24, 40, 0.08) !important;
+  transform: translateY(-1px);
 }
 
 .demo-items {

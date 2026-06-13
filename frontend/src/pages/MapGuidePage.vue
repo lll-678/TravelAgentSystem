@@ -52,54 +52,101 @@
 
     <el-alert v-if="error" :title="error" type="error" show-icon />
 
-    <el-row :gutter="16">
-      <el-col :span="6">
-        <el-card v-if="viewMode === 'scene'" shadow="never" class="stats-card">
-          <div class="stat"><span>道路</span><strong>{{ payload?.statistics.roads ?? "-" }}</strong></div>
-          <div class="stat"><span>建筑</span><strong>{{ payload?.statistics.buildings ?? "-" }}</strong></div>
-          <div class="stat"><span>设施</span><strong>{{ filteredFacilities.length }}</strong></div>
-          <div class="stat"><span>类别</span><strong>{{ payload?.statistics.categories ?? "-" }}</strong></div>
-          <div class="stat"><span>隐藏演示建筑</span><strong>{{ payload?.statistics.hidden_demo_buildings ?? "-" }}</strong></div>
-          <div class="stat"><span>隐藏演示道路</span><strong>{{ payload?.statistics.hidden_demo_roads ?? "-" }}</strong></div>
+    <el-row :gutter="18" class="workbench-layout map-guide-layout">
+      <el-col :span="7">
+        <el-card shadow="never" class="control-panel">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>{{ viewMode === "scene" ? "内部地图图层" : "目的地 POI" }}</strong>
+                <small>{{ viewMode === "scene" ? currentScene.label : destinationSortLabel + "排序" }}</small>
+              </div>
+              <el-tag effect="plain">{{ viewMode === "scene" ? "Scene" : "China" }}</el-tag>
+            </div>
+          </template>
+
+          <div v-if="viewMode === 'scene'" class="metric-grid map-metrics">
+            <div class="metric-tile"><span>道路</span><strong>{{ payload?.statistics.roads ?? "-" }}</strong></div>
+            <div class="metric-tile"><span>建筑</span><strong>{{ payload?.statistics.buildings ?? "-" }}</strong></div>
+            <div class="metric-tile"><span>设施</span><strong>{{ filteredFacilities.length }}</strong></div>
+            <div class="metric-tile"><span>类别</span><strong>{{ payload?.statistics.categories ?? "-" }}</strong></div>
+          </div>
+
+          <template v-else>
+            <div class="metric-grid map-metrics">
+              <div class="metric-tile"><span>POI</span><strong>{{ destinationMarkers.length }}</strong></div>
+              <div class="metric-tile"><span>景区</span><strong>{{ destinationTypeCount.scenic }}</strong></div>
+              <div class="metric-tile"><span>学校</span><strong>{{ destinationTypeCount.school }}</strong></div>
+              <div class="metric-tile"><span>排序</span><strong>{{ destinationSortLabel }}</strong></div>
+            </div>
+            <el-segmented v-model="destinationSort" :options="destinationSortOptions" @change="loadDestinationPois" />
+            <div class="destination-list">
+              <button
+                v-for="destination in destinations"
+                :key="destination.id"
+                class="destination-list-item"
+                :class="{ active: selectedDestination?.id === destination.id }"
+                type="button"
+                @click="selectDestination(destination)"
+              >
+                <span>
+                  <strong>{{ destination.name }}</strong>
+                  <small>{{ destinationCategoryLabel(destination.category) }} · 评分 {{ destination.rating }}</small>
+                </span>
+                <el-tag size="small" effect="plain">{{ destination.popularity }}</el-tag>
+              </button>
+            </div>
+          </template>
         </el-card>
-        <el-card v-else shadow="never" class="stats-card">
-          <div class="stat"><span>POI</span><strong>{{ destinationMarkers.length }}</strong></div>
-          <div class="stat"><span>景区</span><strong>{{ destinationTypeCount.scenic }}</strong></div>
-          <div class="stat"><span>学校</span><strong>{{ destinationTypeCount.school }}</strong></div>
-          <div class="stat"><span>排序</span><strong>{{ destinationSortLabel }}</strong></div>
-          <el-segmented v-model="destinationSort" :options="destinationSortOptions" @change="loadDestinationPois" />
-          <el-divider />
-          <el-table :data="destinations" size="small" height="300" @row-click="selectDestination">
-            <el-table-column prop="name" label="名称" min-width="120" />
-            <el-table-column label="类别" width="72">
-              <template #default="{ row }">{{ destinationCategoryLabel(row.category) }}</template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-        <el-card v-if="viewMode === 'destinations' && selectedDestination" shadow="never" class="result-card">
-          <h2>{{ selectedDestination.name }}</h2>
-          <div class="stat"><span>类别</span><strong>{{ destinationCategoryLabel(selectedDestination.category) }}</strong></div>
-          <div class="stat"><span>评分</span><strong>{{ selectedDestination.rating }}</strong></div>
-          <div class="stat"><span>热度</span><strong>{{ selectedDestination.popularity }}</strong></div>
+
+        <el-card v-if="viewMode === 'destinations' && selectedDestination" shadow="never" class="result-card destination-detail">
+          <template #header>
+            <div class="panel-header">
+              <div>
+                <strong>{{ selectedDestination.name }}</strong>
+                <small>{{ destinationCategoryLabel(selectedDestination.category) }}</small>
+              </div>
+            </div>
+          </template>
           <p class="destination-description">{{ selectedDestination.description }}</p>
-          <el-tag v-for="tag in selectedDestination.tags" :key="tag" class="tag-item">{{ tag }}</el-tag>
-          <el-divider />
-          <el-rate v-model="ratingValue" allow-half />
-          <div class="button-row">
-            <el-button size="small" @click="favoriteSelected">收藏</el-button>
-            <el-button size="small" type="primary" @click="rateSelected">评分</el-button>
+          <div class="tag-row">
+            <el-tag v-for="tag in selectedDestination.tags" :key="tag" class="tag-item" effect="plain">{{ tag }}</el-tag>
+          </div>
+          <div class="metric-grid detail-metrics">
+            <div class="metric-tile"><span>评分</span><strong>{{ selectedDestination.rating }}</strong></div>
+            <div class="metric-tile"><span>热度</span><strong>{{ selectedDestination.popularity }}</strong></div>
+          </div>
+          <div class="rating-box">
+            <el-rate v-model="ratingValue" allow-half />
+            <div class="button-row">
+              <el-button size="small" @click="favoriteSelected">收藏</el-button>
+              <el-button size="small" type="primary" @click="rateSelected">评分</el-button>
+            </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :span="18">
-        <AMapView
-          v-loading="loading"
-          :road-paths="activeRoadPaths"
-          :buildings="activeBuildings"
-          :facilities="activeFacilities"
-          :center="activeCenter"
-          @facility-click="handleMarkerClick"
-        />
+      <el-col :span="17">
+        <div class="map-workspace">
+          <div class="map-workspace-header">
+            <div>
+              <h2>{{ activeMapTitle }}</h2>
+              <p>{{ activeMapSubtitle }}</p>
+            </div>
+            <div class="workspace-actions">
+              <span class="data-chip">{{ activeFacilities.length }} 标记</span>
+              <span class="data-chip">{{ activeBuildings.length }} 建筑</span>
+              <span class="data-chip">{{ activeRoadPaths.length }} 道路</span>
+            </div>
+          </div>
+          <AMapView
+            v-loading="loading"
+            :road-paths="activeRoadPaths"
+            :buildings="activeBuildings"
+            :facilities="activeFacilities"
+            :center="activeCenter"
+            @facility-click="handleMarkerClick"
+          />
+        </div>
       </el-col>
     </el-row>
   </section>
@@ -185,6 +232,14 @@ const activeFacilities = computed<FacilityItem[]>(() =>
 );
 const activeCenter = computed<[number, number]>(() =>
   viewMode.value === "scene" ? payload.value?.center ?? currentScene.value.center : [104.1954, 35.8617],
+);
+const activeMapTitle = computed(() =>
+  viewMode.value === "scene" ? `${currentScene.value.label}内部地图` : "全国景点/学校目的地",
+);
+const activeMapSubtitle = computed(() =>
+  viewMode.value === "scene"
+    ? "展示道路拓扑、建筑区域和服务设施，供路线规划与附近设施查询复用。"
+    : "展示真实景区与高校目的地 POI，点击标记可记录浏览并进入评分/收藏反馈。",
 );
 
 async function loadMap() {
@@ -317,13 +372,96 @@ onMounted(async () => {
   width: 220px;
 }
 
+.map-guide-layout {
+  align-items: start;
+}
+
+.map-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.destination-list {
+  display: grid;
+  gap: 9px;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.destination-list-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.destination-list-item:hover,
+.destination-list-item.active {
+  border-color: #87d0c6;
+  background: #f4fbfa;
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.06);
+}
+
+.destination-list-item strong,
+.destination-list-item small {
+  display: block;
+}
+
+.destination-list-item strong {
+  color: #101828;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.destination-list-item small {
+  margin-top: 5px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.destination-detail h2 {
+  margin: 0;
+}
+
 .destination-description {
   color: #667085;
   line-height: 1.7;
 }
 
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+
 .tag-item {
   margin: 0 6px 6px 0;
+}
+
+.detail-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 12px;
+}
+
+.rating-box {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #edf1f5;
 }
 
 .button-row {
